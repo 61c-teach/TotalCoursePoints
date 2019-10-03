@@ -15,7 +15,7 @@ SECRET_MARKER = "Secret"
 EXTENSIONS_MARKER = "Extensions"
 
 class Classroom:
-    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: list={}, students: list=[], gsheets_grades=None):
+    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None):
         self.grade_bins = grade_bins
         self.categories = categories
         self.students = students
@@ -47,6 +47,7 @@ class Classroom:
         self.categories[c.name] = c
 
     def remove_category(self, c: str):
+        # This is broken
         if c in self.categories:
             del self.categories[c]
 
@@ -86,12 +87,12 @@ class Classroom:
                 s = Student(name, sid, email, extensionData=extension, secret=secret)
                 self.add_student(s)
 
-    def get_total_possible(self, with_hidden=False) -> int:
+    def get_total_possible(self, with_hidden=False, only_inputted=False) -> int:
         points = 0
         for cat in self.categories.values():
             if cat.hidden and not with_hidden:
                 continue
-            points += cat.get_total_possible(with_hidden=with_hidden)
+            points += cat.get_total_possible(with_hidden=with_hidden, only_inputted=only_inputted)
         return points
 
     def process(self, with_gsheet_extensions=None):
@@ -148,6 +149,13 @@ class Classroom:
     def apply_slip_days(self):
         for student in self.students:
             student.apply_slip_days()
+
+    def all_inputted(self, with_hidden=False) -> bool:
+        for c in self.categories.values():
+            if not c.all_inputted(with_hidden=with_hidden):
+                return False
+        return True
+
 
     def print_class_statistics(self):
         """This will print things like how many students, how many of each grade, etc...."""

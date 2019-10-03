@@ -1,6 +1,9 @@
 """
 Grade bins.
 """
+class GradeBinsError(Exception):
+    pass
+
 class Max:
     def __repr__(self):
         return self.__str__()
@@ -57,11 +60,21 @@ class Bin:
             return value >= self.min
         return value >= self.min and value < self.max
 
+    def in_relative_bin(self, percentage:float, max_points:float):
+        return self.in_bin(percentage * max_points)
+
 class GradeBins:
-    def __init__(self, bins: list = [], pass_threshold: Bin = None):
+    def __init__(self, bins: list = [], pass_threshold: Bin = None, normal_max_points: float = None):
         self.bins = {}
+        mxpts = None
         for b in bins:
+            if mxpts is None or b.max > mxpts:
+                mxpts = b.max
             self.add_bin(b)
+
+        if normal_max_points is not None:
+            mxpts = normal_max_points
+        self.normal_max_points = mxpts
         
         if isinstance(pass_threshold, Bin):
             self.pass_threshold = pass_threshold.min
@@ -104,3 +117,11 @@ class GradeBins:
 
     def is_passing(self, value: float) -> bool:
         return value >= self.pass_threshold
+
+    def relative_bin(self, score:float, max_score:float) -> bool:
+        if self.normal_max_points is None:
+            raise GradeBinsError("There is no max score set!")
+        for b in self.bins.values():
+            if b.in_relative_bin(score / max_score, self.normal_max_points):
+                return b
+        return None

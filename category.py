@@ -44,16 +44,29 @@ class Category:
         for assignment in self.assignments:
             assignment.load_data()
 
-    def get_total_possible(self, with_hidden=False):
+    def get_total_possible(self, with_hidden=False, only_inputted=False):
         if self.course_points is not None:
-            return self.course_points
+            points = self.course_points
+            if only_inputted:
+                points = 0
+                for a in self.assignments:
+                    if a.is_inputted(with_hidden=with_hidden):
+                        points += a.get_total_possible()
+            return points
         points = 0
         for a in self.assignments:
-            if a.hidden and not with_hidden:
+            if (a.hidden and not with_hidden) or (not a.is_inputted() and only_inputted):
                 continue
             points += a.get_total_possible()
         return points
             
+    def all_inputted(self, with_hidden=False):
+        if self.hidden and not with_hidden:
+            return True
+        for a in self.assignments:
+            if not a.is_inputted(with_hidden=with_hidden):
+                return False
+        return True
 
     def get_student_data(self, student: Student):
         a_data = []
@@ -102,6 +115,9 @@ class StudentCategoryData:
             if assign.assignment.id == assign_id:
                 return assign
         return None
+    
+    def all_inputted(self, with_hidden=False):
+        return self.category.all_inputted(with_hidden=with_hidden)
 
     def get_str(self):
         s = "{}Here is the individual list of assignments:\n==========\n".format(self.category.comment)

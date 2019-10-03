@@ -64,6 +64,12 @@ class Student:
         b = grade_bins.in_bin(self.total_points())
         return b.id
 
+    def get_approx_grade(self, c) -> str:
+        cur_score = self.total_points()
+        cur_max_score = c.get_total_possible(only_inputted=True)
+        b = c.grade_bins.relative_bin(cur_score, cur_max_score)
+        return f"You are on track for a(n) {b}"
+
     def apply_extensions(self):
         for ext_cat_key, value in self.extensionData.items():
             cat = self.categoryData.get(ext_cat_key)
@@ -80,7 +86,11 @@ class Student:
             cat.apply_slip_days()
 
     def main_results_str(self, c):
-        return "SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(self.sid, self.email, self.total_points(), c.get_total_possible(), self.get_grade(c.grade_bins))
+        if c.all_inputted():
+            grade_info = self.get_grade(c.grade_bins)
+        else:
+            grade_info = self.get_approx_grade(c)
+        return "SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(self.sid, self.email, self.total_points(), c.get_total_possible(), grade_info)
 
     def dump_data(self, results_file: str, data: dict) -> None:
         jsondata = json.dumps(data, ensure_ascii=False)

@@ -200,6 +200,11 @@ class Assignment:
         stats = self.get_stats()
         return "mean: {}\nmedian: {}\nstd dev: {}\nmax: {}\nmin: {}\n".format(*stats)
 
+    def is_inputted(self, with_hidden=False):
+        if self.hidden and not with_hidden:
+            return True
+        return (self.get_total_possible() == 0 or self.data_loaded)
+
 
 class StudentAssignmentData:
     def __init__(self, 
@@ -242,6 +247,9 @@ class StudentAssignmentData:
         if convert_to_course_points:
             score *= (self.assignment.get_total_possible() / self.assignment.out_of)
         return penalty * score
+
+    def is_inputted(self, with_hidden=False):
+        return self.assignment.is_inputted(with_hidden=with_hidden)
     
     def get_str(self):
         s = "{}[{}] {}\n{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment)
