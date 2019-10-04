@@ -90,7 +90,7 @@ class Student:
             grade_info = self.get_grade(c.grade_bins)
         else:
             grade_info = self.get_approx_grade(c)
-        return "SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(self.sid, self.email, self.total_points(), c.get_total_possible(), grade_info)
+        return "{}{}SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(c.get_welcome(), c.get_comment(), self.sid, self.email, self.total_points(), c.get_total_possible(), grade_info)
 
     def dump_data(self, results_file: str, data: dict) -> None:
         jsondata = json.dumps(data, ensure_ascii=False)

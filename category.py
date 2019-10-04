@@ -80,6 +80,16 @@ class StudentCategoryData:
         self.category = category
         self.assignments_data: list(StudentAssignmentData) = assignments
         self.get_total_possible = category.get_total_possible
+        self.reset_comment()
+
+    def append_comment(self, *args, sep=' ', end='\n'):
+        self.personal_comment += sep.join(args) + end
+
+    def reset_comment(self):
+        self.personal_comment = ""
+    
+    def get_comment(self):
+        return self.personal_comment
 
     def __repr__(self):
         return self.__str__()
@@ -120,7 +130,7 @@ class StudentCategoryData:
         return self.category.all_inputted(with_hidden=with_hidden)
 
     def get_str(self):
-        s = "{}Here is the individual list of assignments:\n==========\n".format(self.category.comment)
+        s = "{}{}Here is the individual list of assignments:\n==========\n".format(self.category.comment, self.get_comment())
         slip_days_used = 0
         for assign in self.assignments_data:
             slip_days_used += assign.slip_days_used

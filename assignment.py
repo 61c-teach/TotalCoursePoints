@@ -233,6 +233,16 @@ class StudentAssignmentData:
         self.data_loaded = data_loaded
         self.data_found = data_found
         self.get_total_possible = assignment.get_total_possible
+        self.reset_comment()
+
+    def append_comment(self, *args, sep=' ', end='\n'):
+        self.personal_comment += sep.join(args) + end
+
+    def reset_comment(self):
+        self.personal_comment = ""
+    
+    def get_comment(self):
+        return self.personal_comment
 
     def is_hidden(self):
         return self.assignment.hidden
@@ -252,7 +262,7 @@ class StudentAssignmentData:
         return self.assignment.is_inputted(with_hidden=with_hidden)
     
     def get_str(self):
-        s = "{}[{}] {}\n{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment)
+        s = "{}[{}] {}\n{}{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment, self.get_comment())
         entered = False
         if self.assignment.get_total_possible() == 0:
             s += "This assignment is not worth any course points!"

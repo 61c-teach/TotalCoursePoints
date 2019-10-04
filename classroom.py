@@ -24,7 +24,30 @@ class Classroom:
         self.class_id = class_id
         self.gsheets_grades = gsheets_grades
         self.time = datetime.datetime.now()
+        self.reset_comment()
+        self.reset_welcome()
+        self.append_welcome(f"Welcome to the Total Course Points Autograder for [{class_id}] {name}!")
+        self.append_welcome(f"This autograder is designed to increase the transparency of {class_id}'s grading.", end="\n\n")
+        self.append_welcome(f"[WARN]: This is a prototype grade calculator so it may have bugs! Please report bugs to course staff if you see any.", end="\n\n")
 
+    def append_welcome(self, *args, sep=' ', end='\n'):
+        self.welcome_message += sep.join(args) + end
+
+    def reset_welcome(self):
+        self.welcome_message = ""
+    
+    def get_welcome(self):
+        return self.welcome_message
+
+    def append_comment(self, *args, sep=' ', end='\n'):
+        self.global_comment += sep.join(args) + end
+
+    def reset_comment(self):
+        self.global_comment = ""
+    
+    def get_comment(self):
+        return self.global_comment
+    
     def get_time(self):
         return self.time
     
