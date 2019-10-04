@@ -7,7 +7,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # we want to wait 10 seconds before we try to do the request.
 gspread_timeout = 10
 # <= 0 means we will try till success. otherwise a positive value.
-gspread_attempts = 100
+gspread_attempts = 500
 
 RESOURCE_EXHAUSTED = "RESOURCE_EXHAUSTED"
 

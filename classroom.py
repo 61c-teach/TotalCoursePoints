@@ -7,6 +7,7 @@ from .student import Student
 from .utils import GSheetExtensions
 import csv
 import json
+import datetime
 
 NAME_MARKER = "Name"
 EMAIL_MARKER = "Email"
@@ -22,6 +23,13 @@ class Classroom:
         self.name = name
         self.class_id = class_id
         self.gsheets_grades = gsheets_grades
+        self.time = datetime.datetime.now()
+
+    def get_time(self):
+        return self.time
+    
+    def set_time(self, time):
+        self.time = time
 
     def __repr__(self):
         return self.__str__()
