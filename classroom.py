@@ -31,6 +31,9 @@ class Classroom:
     def set_time(self, time):
         self.time = time
 
+    def set_time_now(self):
+        self.time = datetime.datetime.now()
+
     def __repr__(self):
         return self.__str__()
 
