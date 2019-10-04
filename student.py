@@ -68,7 +68,7 @@ class Student:
         cur_score = self.total_points()
         cur_max_score = c.get_total_possible(only_inputted=True)
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
-        return f"You are on track for a(n) {b.id}"
+        return f"You are on track for a(n) {b.id} based off of the {cur_max_score} points entered."
 
     def apply_extensions(self):
         for ext_cat_key, value in self.extensionData.items():
