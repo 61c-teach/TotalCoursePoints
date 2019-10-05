@@ -23,7 +23,7 @@ class Classroom:
         self.name = name
         self.class_id = class_id
         self.gsheets_grades = gsheets_grades
-        self.time = datetime.datetime.now()
+        self.set_time_now()
         self.reset_comment()
         self.reset_welcome()
         self.append_welcome(f"Welcome to the Total Course Points Autograder for [{class_id}] {name}!")
@@ -37,7 +37,7 @@ class Classroom:
         self.welcome_message = ""
     
     def get_welcome(self):
-        return self.welcome_message
+        return self.welcome_message + f"[INFO]: The last calculation was at {self.get_time()}\n\n"
 
     def append_comment(self, *args, sep=' ', end='\n'):
         self.global_comment += sep.join(args) + end
