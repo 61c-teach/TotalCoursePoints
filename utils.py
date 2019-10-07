@@ -3,6 +3,7 @@ from gspread.exceptions import APIError
 from time import sleep
 import json
 from oauth2client.service_account import ServiceAccountCredentials
+import math
 
 # we want to wait 10 seconds before we try to do the request.
 gspread_timeout = 10
@@ -115,3 +116,49 @@ def safe_cast(val, to_type, default=None):
         return to_type(val)
     except (ValueError, TypeError):
         return default
+
+class Time:
+    def __init__(self, seconds=0, minutes=0, hours=0, days=0):
+        self.seconds = seconds % 60
+        minutes += math.floor(seconds / 60)
+        self.minutes = minutes % 60
+        hours += math.floor(minutes / 60)
+        self.hours = hours % 24
+        self.days = days + math.floor(hours / 24)
+    
+    def get_seconds(self):
+        return self.seconds + 60 * (self.minutes + 60 * (self.hours + 24 * (self.days)))
+
+    def ceil_to_days(self) -> int:
+        m = self.minutes
+        h = self.hours
+        d = self.days
+        m += math.ceil(self.seconds / 60)
+        h += math.ceil(m / 60)
+        d += math.ceil(h / 24)
+        return d
+
+    def __sub__(self, other):
+        if isinstance(other, int):
+            return self.get_seconds() - other
+        if isinstance(other, Time):
+            t = self.get_seconds() - other.get_seconds()
+            if t < 0:
+                return None
+            return Time(seconds=t)
+        raise NotImplementedError()
+
+    def __rsub__(self, other):
+        if isinstance(other, int):
+            return other - self.get_seconds()
+        if isinstance(other, Time):
+            t = other.get_seconds() - self.get_seconds()
+            if t < 0:
+                return None
+            return Time(seconds=t)
+        raise NotImplementedError()
+
+class GracePeriod:
+    def __init__(self, time: Time=Time(), apply_to_all_late_days=False):
+        self.time: Time = time
+        self.apply_to_all_late_days: bool = apply_to_all_late_days

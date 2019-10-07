@@ -7,7 +7,7 @@ from math import ceil
 import numpy
 import csv
 from typing import Callable
-from .utils import GSheetBase, safe_cast
+from .utils import GSheetBase, safe_cast, GracePeriod, Time
 
 SID_MARKER = "SID"
 NAME_MARKER = "Name"
@@ -35,6 +35,7 @@ class Assignment:
         out_of: float=None, 
         hidden: bool=False,
         additional_points: float=0,
+        grace_period: GracePeriod=None,
         gsheets_grades=None,
     ):
         self.id = id
@@ -66,6 +67,9 @@ class Assignment:
         if late_penalty is None:
             late_penalty = category.late_penalty
         self.late_penalty = late_penalty
+        if grace_period is None:
+            grace_period = self.category.grace_period
+        self.grace_period = grace_period
         self.percentage = percentage
         self.hidden = hidden or category.hidden
         self.data = {}
@@ -117,12 +121,17 @@ class Assignment:
                 if isinstance(lateness, str):
                     lateness = lateness.split(':')
                     if len(lateness) == 3:
-                        lateness = [int(x) for x in lateness]
-                        if lateness[2] > 0:
-                            lateness[1] += 1
-                        if lateness[1] > 0:
-                            lateness[0] += 1
-                        days_late = lateness[0] / 24
+                        hours, minutes, seconds = [int(x) for x in lateness]
+                        t = Time(seconds=seconds, minutes=minutes, hours=hours)
+                        gp = self.grace_period
+                        if isinstance(gp, GracePeriod):
+                            if gp.apply_to_all_late_days:
+                                raise NotImplementedError()
+                            else:
+                                dif = t - gp.time
+                                if dif is None:
+                                    t = Time()
+                        days_late = t.ceil_to_days()
                 sad = StudentAssignmentData(score, days_late, name, sid, email, self)
                 self.scores.append(sad.score)
                 dat = self.data.get(sid)

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .utils import GracePeriod, Time
 
 class Category:
     def __init__(self,
@@ -10,7 +11,8 @@ class Category:
         comment: str = "",
         show_stats: bool = True,
         show_rank: bool = True,
-        out_of: float=None, 
+        out_of: float=None,
+        grace_period: GracePeriod=None,
         hidden: bool=False
     ):
         self.name = name
@@ -27,6 +29,7 @@ class Category:
         self.comment = comment
         self.max_slip_days = max_slip_days
         self.late_penalty = late_penalty
+        self.grace_period = grace_period
         self.hidden = hidden
 
     def add_assignments(self, assignments: list):
