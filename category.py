@@ -7,7 +7,10 @@ class Category:
         assignments = None, 
         course_points: float = None,
         late_penalty: float = 1,
-        max_slip_days: int = None,
+        late_interval: Time = Time(days=1),
+        blanket_late_penalty: bool = False,
+        max_slip_count: int = None,
+        slip_interval: Time = Time(days=1),
         comment: str = "",
         show_stats: bool = True,
         show_rank: bool = True,
@@ -27,8 +30,11 @@ class Category:
         self.show_stats = show_stats
         self.show_rank = show_rank
         self.comment = comment
-        self.max_slip_days = max_slip_days
+        self.max_slip_count = max_slip_count
+        self.slip_interval = slip_interval
         self.late_penalty = late_penalty
+        self.late_interval = late_interval
+        self.blanket_late_penalty = blanket_late_penalty
         self.grace_period = grace_period
         self.hidden = hidden
 
@@ -100,24 +106,24 @@ class StudentCategoryData:
     def __str__(self):
         return "Category: {}\nAssignments:\n{}".format(self.category.name, self.assignments_data)
 
-    def apply_optimal_slip_days(self):
+    def apply_optimal_slip_time(self):
         pass
 
-    def apply_ordered_slip_days(self):
-        slip_days_left = self.category.max_slip_days
-        if slip_days_left is None:
+    def apply_ordered_slip_time(self):
+        slip_time_left = self.category.max_slip_count
+        if slip_time_left is None:
             return
         for assignment in self.category.assignments:
-            if isinstance(assignment.allowed_slip_days, int) and assignment.allowed_slip_days < 0:
+            if isinstance(assignment.allowed_slip_count, int) and assignment.allowed_slip_count < 0:
                 continue
             for assignment_data in self.assignments_data:
                 if assignment_data.assignment == assignment:
-                    if assignment_data.get_late_days():
-                        if assignment.allowed_slip_days is not None:
-                            assignment_data.slip_days_used = min(assignment_data.get_late_days(), slip_days_left, assignment.allowed_slip_days)
+                    if assignment_data.get_late_time().get_seconds() > 0:
+                        if assignment.allowed_slip_time is not None:
+                            assignment_data.slip_time_used = min(assignment_data.get_num_late(), slip_time_left, assignment.allowed_slip_count)
                         else:
-                            assignment_data.slip_days_used = min(assignment_data.get_late_days(), slip_days_left)
-                        slip_days_left -= assignment_data.slip_days_used
+                            assignment_data.slip_time_used = min(assignment_data.get_num_late(), slip_time_left)
+                        slip_time_left -= assignment_data.slip_time_used
                     continue
 
     def is_hidden(self):
@@ -134,12 +140,12 @@ class StudentCategoryData:
 
     def get_str(self):
         s = "{}{}Here is the individual list of assignments:\n==========\n".format(self.category.comment, self.get_comment())
-        slip_days_used = 0
+        slip_time_used = 0
         for assign in self.assignments_data:
-            slip_days_used += assign.slip_days_used
+            slip_time_used += assign.slip_time_used
             s += assign.get_str()
-        if self.category.max_slip_days:
-            s += "\nSlip days left: {} out of {}\n".format(self.category.max_slip_days - slip_days_used, self.category.max_slip_days)
+        if self.category.max_slip_count:
+            s += "\nSlip time left: {} out of {}\n".format(self.category.max_slip_count - slip_time_used, self.category.max_slip_count)
         s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(), self.category.get_total_possible())
         return s
     
@@ -151,7 +157,7 @@ class StudentCategoryData:
             total += a.get_course_points()
         return total
 
-    apply_slip_days = apply_ordered_slip_days
+    apply_slip_days = apply_ordered_slip_time
 
 
 from .assignment import Assignment, StudentAssignmentData

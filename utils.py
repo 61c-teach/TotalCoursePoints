@@ -118,16 +118,26 @@ def safe_cast(val, to_type, default=None):
         return default
 
 class Time:
-    def __init__(self, seconds=0, minutes=0, hours=0, days=0):
+    def __init__(self, seconds=0, minutes=0, hours=0, days=0, sign=0):
+        if seconds < 0 or minutes < 0 or hours < 0 or days < 0:
+            sign = -1
+        self.sign = sign
+        seconds = abs(seconds)
+        minutes = abs(minutes)
+        hours = abs(hours)
+        days = abs(days)
         self.seconds = seconds % 60
-        minutes += math.floor(seconds / 60)
+        minutes += seconds // 60
         self.minutes = minutes % 60
-        hours += math.floor(minutes / 60)
+        hours += minutes // 60
         self.hours = hours % 24
-        self.days = days + math.floor(hours / 24)
+        self.days = days + hours // 24
     
     def get_seconds(self):
-        return self.seconds + 60 * (self.minutes + 60 * (self.hours + 24 * (self.days)))
+        return (self.seconds + 60 * (self.minutes + 60 * (self.hours + 24 * (self.days)))) * self.get_sign()
+
+    def get_sign(self):
+        return -1 if self.sign < 0 else 1
 
     def ceil_to_days(self) -> int:
         m = self.minutes
@@ -137,6 +147,14 @@ class Time:
         h += math.ceil(m / 60)
         d += math.ceil(h / 24)
         return d
+    
+    def ceil_to_hours(self) -> int:
+        m = self.minutes
+        h = self.hours
+        m += math.ceil(self.seconds / 60)
+        h += math.ceil(m / 60)
+        h += self.days * 24
+        return h
 
     def __sub__(self, other):
         if isinstance(other, int):
@@ -144,7 +162,7 @@ class Time:
         if isinstance(other, Time):
             t = self.get_seconds() - other.get_seconds()
             if t < 0:
-                return None
+                return Time(seconds=t * -1, sign=-1)
             return Time(seconds=t)
         raise NotImplementedError()
 
@@ -154,11 +172,95 @@ class Time:
         if isinstance(other, Time):
             t = other.get_seconds() - self.get_seconds()
             if t < 0:
-                return None
+                return Time(seconds=t * -1, sign=-1)
             return Time(seconds=t)
         raise NotImplementedError()
 
+    def __mul__(self, other):
+        if isinstance(other, int):
+            return Time(seconds = self.get_seconds() * other)
+        raise NotImplementedError()
+
+
+    def __str__(self):
+        # sign = self.get_sign()
+        # if sign < 0:
+        #     sign = "- "
+        # else:
+        #     sign = " "
+        # return f"{sign}{self.days}-{self.hours}:{self.minutes}:{self.seconds}"
+        return self.pretty_time_str()
+
+    def __repr__(self):
+        return self.__str__()
+    
+    def get_count(self, interval: Time):
+        count = 0
+        if self.get_seconds() == 0:
+            return count
+        late_amt = self
+        while True:
+            count += 1
+            late_amt = late_amt - interval
+            if late_amt.get_seconds() <= 0:
+                return count
+
+    def _compare(self, other, method):
+        try:
+            if isinstance(other, int):
+                seconds = other
+            else:
+                seconds = other.get_seconds()
+            return method(self.get_seconds(), seconds)
+        except (AttributeError, TypeError):
+            # _cmpkey not implemented, or return different type,
+            # so I can't compare with "other".
+            return NotImplemented
+
+    def __lt__(self, other):
+        return self._compare(other, lambda s, o: s < o)
+
+    def __le__(self, other):
+        return self._compare(other, lambda s, o: s <= o)
+
+    def __eq__(self, other):
+        return self._compare(other, lambda s, o: s == o)
+
+    def __ge__(self, other):
+        return self._compare(other, lambda s, o: s >= o)
+
+    def __gt__(self, other):
+        return self._compare(other, lambda s, o: s > o)
+
+    def __ne__(self, other):
+        return self._compare(other, lambda s, o: s != o)
+
+    def pretty_time_str(self):
+        s = self.seconds
+        m = self.minutes
+        h = self.hours
+        d = self.days
+        sstr = "" if s == 0 else str(s) + " second"
+        sstr += "" if sstr == "" or s == 1 else "s"
+        mstr = "" if m == 0 else str(m) + " minute"
+        mstr += "" if mstr == "" or m == 1 else "s"
+        hstr = "" if h == 0 else str(h) + " hour"
+        hstr += "" if hstr == "" or h == 1 else "s"
+        dstr = "" if d == 0 else str(d) + " day"
+        dstr += "" if dstr == "" or d == 1 else "s"
+        st = dstr
+        for tmpstr in [hstr, mstr, sstr]:
+            if st != "" and tmpstr != "":
+                st += " "
+            st += tmpstr
+        if st == "":
+            st = "0 seconds"
+        else:
+            sign = "- " if self.get_sign() < 0 else ""
+            st = f"{sign}{st}"
+        return st
+
 class GracePeriod:
-    def __init__(self, time: Time=Time(), apply_to_all_late_days=False):
+    def __init__(self, time: Time=Time(), apply_to_all_late_time=False):
         self.time: Time = time
-        self.apply_to_all_late_days: bool = apply_to_all_late_days
+        self.apply_to_all_late_time: bool = apply_to_all_late_time

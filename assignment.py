@@ -28,7 +28,10 @@ class Assignment:
         course_points: float = 0,
         percentage: float = None,
         late_penalty: float = None,
-        allowed_slip_days: int = None,
+        late_interval: Time = None,
+        blanket_late_penalty: bool = None,
+        allowed_slip_count: int = None,
+        slip_interval: Time = None,
         comment: str = "",
         show_stats: bool = None,
         show_rank: bool = None,
@@ -63,10 +66,19 @@ class Assignment:
             show_rank = category.show_rank
         self.show_rank = show_rank
         self.comment = comment
-        self.allowed_slip_days = allowed_slip_days
+        self.allowed_slip_count = allowed_slip_count
+        if slip_interval is None:
+            slip_interval = category.slip_interval
+        self.slip_interval = slip_interval
         if late_penalty is None:
             late_penalty = category.late_penalty
         self.late_penalty = late_penalty
+        if late_interval is None:
+            late_interval = category.late_interval
+        self.late_interval = late_interval
+        if blanket_late_penalty is None:
+            blanket_late_penalty = category.blanket_late_penalty
+        self.blanket_late_penalty = blanket_late_penalty
         if grace_period is None:
             grace_period = self.category.grace_period
         self.grace_period = grace_period
@@ -116,7 +128,7 @@ class Assignment:
                 sid = str(row.get(SID_MARKER))
                 name = row.get(NAME_MARKER)
                 email = row.get(EMAIL_MARKER)
-                days_late = 0
+                time_late = 0
                 lateness = row.get(DAYS_LATE_MAKER)
                 if isinstance(lateness, str):
                     lateness = lateness.split(':')
@@ -125,14 +137,14 @@ class Assignment:
                         t = Time(seconds=seconds, minutes=minutes, hours=hours)
                         gp = self.grace_period
                         if isinstance(gp, GracePeriod):
-                            if gp.apply_to_all_late_days:
+                            if gp.apply_to_all_late_time:
                                 raise NotImplementedError()
                             else:
                                 dif = t - gp.time
-                                if dif is None:
+                                if dif < 0:
                                     t = Time()
-                        days_late = t.ceil_to_days()
-                sad = StudentAssignmentData(score, days_late, name, sid, email, self)
+                        time_late = t
+                sad = StudentAssignmentData(score, time_late, name, sid, email, self)
                 self.scores.append(sad.score)
                 dat = self.data.get(sid)
                 if dat is None:
@@ -218,27 +230,27 @@ class Assignment:
 class StudentAssignmentData:
     def __init__(self, 
             score: float, 
-            days_late: float, 
+            time_late: float, 
             name: str, 
             sid: str, 
             email: str, 
             assignment: Assignment, 
-            slip_days_used: int=0, 
-            extension_days: int=0,
+            slip_time_used: int=0, 
+            extension_time: Time=Time(),
             data_loaded: bool=True,
             data_found: bool=True
         ):
-        if days_late is None:
-            days_late = 0
+        if time_late is None:
+            time_late = Time()
         else:
-            self.days_late = ceil(days_late)
+            self.time_late = time_late
         self.score = 0 if not score else float(score)
         self.assignment = assignment
         self.name = name
         self.sid = sid
         self.email = email
-        self.slip_days_used = slip_days_used
-        self.extension_days = extension_days
+        self.slip_time_used = slip_time_used
+        self.extension_time = extension_time
         self.data_loaded = data_loaded
         self.data_found = data_found
         self.get_total_possible = assignment.get_total_possible
@@ -256,12 +268,18 @@ class StudentAssignmentData:
     def is_hidden(self):
         return self.assignment.hidden
 
-    def get_late_days(self):
-        return max(0, self.days_late - self.slip_days_used - self.extension_days)
+    def get_late_time(self):
+        return max(Time(), self.time_late - (self.slip_time_used * self.assignment.late_interval) - self.extension_time)
+
+    def get_num_late(self):
+        late_time = self.get_late_time()
+        return late_time.get_count(self.assignment.late_interval)
 
     def get_course_points(self, with_additional_points: bool=True, convert_to_course_points=True):
-        late_days = self.get_late_days()
-        penalty = 1 - min(late_days * self.assignment.late_penalty, 1)
+        num_late_time = self.get_num_late()
+        if self.assignment.blanket_late_penalty and num_late_time > 0:
+            num_late_time = 1
+        penalty = 1 - min(num_late_time * self.assignment.late_penalty, 1)
         score = self.score + (self.assignment.additional_points if with_additional_points else 0)
         if convert_to_course_points:
             score *= (self.assignment.get_total_possible() / self.assignment.out_of)
@@ -289,14 +307,14 @@ class StudentAssignmentData:
         else:
             entered = True
             score = self.score
-            if self.days_late > 0:
-                s += "raw score: {} / {}\n".format(score, self.assignment.out_of)
-                s += "days late: {}\n".format(self.days_late)
-                if self.extension_days > 0:
-                    s += "extension days: {}\n".format(self.extension_days)
+            if self.time_late > 0:
+                s += f"raw score: {score} / {self.assignment.out_of}\n"
+                s += f"time late: {self.time_late}\n"
+                if self.extension_time.get_seconds() > 0:
+                    s += "extension time: {}\n".format(self.extension_time)
                 if self.assignment.category.max_slip_days is not None:
-                    s += "slip days: {}\n".format(self.slip_days_used)
-                s += "late days: {}\n".format(self.get_late_days())
+                    s += "slip time count: {}\n".format(self.slip_time_used)
+                s += f"late count: {self.get_num_late()}\n"
                 score = self.get_course_points(convert_to_course_points=False)
             course_points = self.get_course_points()
         

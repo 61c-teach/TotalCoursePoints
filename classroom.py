@@ -4,7 +4,7 @@ This is the classroom and its info.
 from .assignment import Category
 from .grade_bins import GradeBins
 from .student import Student
-from .utils import GSheetExtensions
+from .utils import GSheetExtensions, Time
 import csv
 import json
 import datetime
@@ -151,7 +151,7 @@ class Classroom:
                 cat_data = cat.get_student_data(student)
                 student.add_category_data(cat_data)
 
-    def apply_extensions(self, with_gsheet_extensions=None):
+    def apply_extensions(self, with_gsheet_extensions=None, process_gsheet_cell=lambda cell: Time(days=cell)):
         if with_gsheet_extensions is not None:
             try:
                 gse = GSheetExtensions(with_gsheet_extensions)
@@ -164,8 +164,8 @@ class Classroom:
                             for ext, info in exts.items():
                                 if ext in ed:
                                     edat = ed[ext]
-                                    for a, days in info.items():
-                                        edat[a] = days
+                                    for a, t in info.items():
+                                        edat[a] = process_gsheet_cell(t)
                                 else:
                                     ed[ext] = info
                         else:
