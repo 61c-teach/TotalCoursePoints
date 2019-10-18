@@ -54,7 +54,8 @@ class Classroom:
         return self.time
     
     def get_localized_time(self):
-        return self.timezone.localize(self.time)
+        # return self.timezone.localize(self.time)
+        return self.time.astimezone(self.timezone)
     
     def set_time(self, time):
         self.time = time
