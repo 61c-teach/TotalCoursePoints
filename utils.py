@@ -181,6 +181,9 @@ class Time:
             return Time(seconds = self.get_seconds() * other)
         raise NotImplementedError()
 
+    def __rmul__(self, other):
+        return self.__mul__
+
 
     def __str__(self):
         # sign = self.get_sign()
