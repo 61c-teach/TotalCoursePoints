@@ -146,7 +146,7 @@ class Assignment:
                                 raise NotImplementedError()
                             else:
                                 dif = t - gp.time
-                                if dif < 0:
+                                if dif <= 0:
                                     t = Time()
                         time_late = t
                 sad = StudentAssignmentData(score, time_late, name, sid, email, self)
