@@ -18,6 +18,9 @@ class Category:
         grace_period: GracePeriod=None,
         hidden: bool=False
     ):
+        init_str = f"Initializing category {name}..."
+        init_str_done = init_str + "Done!"
+        print(init_str)
         self.name = name
         if assignments is None:
             assignments = []
@@ -37,6 +40,7 @@ class Category:
         self.blanket_late_penalty = blanket_late_penalty
         self.grace_period = grace_period
         self.hidden = hidden
+        print(init_str_done)
 
     def add_assignments(self, assignments: list):
         for a in assignments:
@@ -119,7 +123,7 @@ class StudentCategoryData:
             for assignment_data in self.assignments_data:
                 if assignment_data.assignment == assignment:
                     if assignment_data.get_late_time().get_seconds() > 0:
-                        if assignment.allowed_slip_time is not None:
+                        if assignment.allowed_slip_count is not None:
                             assignment_data.slip_time_used = min(assignment_data.get_num_late(), slip_time_left, assignment.allowed_slip_count)
                         else:
                             assignment_data.slip_time_used = min(assignment_data.get_num_late(), slip_time_left)

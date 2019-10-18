@@ -41,6 +41,10 @@ class Assignment:
         grace_period: GracePeriod=None,
         gsheets_grades=None,
     ):
+        tmp = f": {name}" if name is not None else ""
+        init_str = f"Initializing assignment {id}{tmp}..."
+        init_str_done = init_str + "Done!"
+        print(init_str)
         self.id = id
         self.name = name
         self.category = category
@@ -102,6 +106,7 @@ class Assignment:
             else:
                 self.data_loaded = False
                 print("Failed to load file {}.".format(self.data_file))
+        print(init_str_done)
 
     def load_gsheet(self, gsheet, data_sheet: str=None):
         if data_sheet is None:
@@ -230,7 +235,7 @@ class Assignment:
 class StudentAssignmentData:
     def __init__(self, 
             score: float, 
-            time_late: float, 
+            time_late: Time, 
             name: str, 
             sid: str, 
             email: str, 
@@ -268,8 +273,11 @@ class StudentAssignmentData:
     def is_hidden(self):
         return self.assignment.hidden
 
+    def adjusted_late_time(self):
+        return max(Time(), self.time_late - self.extension_time)
+
     def get_late_time(self):
-        return max(Time(), self.time_late - (self.slip_time_used * self.assignment.late_interval) - self.extension_time)
+        return max(Time(), self.adjusted_late_time() - (self.slip_time_used * self.assignment.late_interval))
 
     def get_num_late(self):
         late_time = self.get_late_time()
@@ -312,7 +320,11 @@ class StudentAssignmentData:
                 s += f"time late: {self.time_late}\n"
                 if self.extension_time.get_seconds() > 0:
                     s += "extension time: {}\n".format(self.extension_time)
-                if self.assignment.category.max_slip_days is not None:
+                    adj_late = self.adjusted_late_time()
+                    s += f"adjusted late time: {adj_late}\n"
+                    if self.assignment.category.max_slip_count is not None:
+                        s += f"initial late count: {adj_late.get_count(self.assignment.late_interval)}\n"
+                if self.assignment.category.max_slip_count is not None:
                     s += "slip time count: {}\n".format(self.slip_time_used)
                 s += f"late count: {self.get_num_late()}\n"
                 score = self.get_course_points(convert_to_course_points=False)

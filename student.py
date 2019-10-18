@@ -12,6 +12,7 @@ class Student:
         self.email = email
         self.categoryData = {}
         self.extensionData = extensionData
+        # FIXME Parse extension data!
         if not extensionData:
             self.extensionData = {}
         if isinstance(self.extensionData, str):
@@ -71,6 +72,8 @@ class Student:
         return f"You are on track for a(n) {b.id} based off of the {cur_max_score} points entered."
 
     def apply_extensions(self):
+        # if self.sid == "3031857271":
+        #     import ipdb; ipdb.set_trace()
         for ext_cat_key, value in self.extensionData.items():
             cat = self.categoryData.get(ext_cat_key)
             if cat is None:
@@ -79,7 +82,7 @@ class Student:
                 assign = cat.get_assignment_data(ext_assign)
                 if assign is None:
                     continue
-                assign.extension_days = int(value)
+                assign.extension_time = value
 
     def apply_slip_days(self):
         for cat in self.categoryData.values():
@@ -97,7 +100,7 @@ class Student:
         with open(results_file, "w") as f:
             f.write(jsondata)
 
-    def dump_result(self, c):
+    def dump_str(self, c):
         tests = []
         results = {
             "score":self.total_points(),
@@ -110,6 +113,10 @@ class Student:
                     "name": cat.category.name,
                     "output": cat.get_str()
                 })
+        return results
+
+    def dump_result(self, c):
+        results = self.dump_str(c)
         self.dump_data("/autograder/results/results.json", results)
         
                 

@@ -73,7 +73,7 @@ class GSheetExtensions(GSheetBase):
     #         return None
     #     return ws.get_all_records()
 
-    def get_sheet_extensions(self, sheet_name):
+    def get_sheet_extensions(self, sheet_name, process_gsheet_cell=lambda cell: Time(parse=cell)):
         data = self.get_worksheet_records(sheet_name)
         if data is None:
             return None
@@ -88,20 +88,21 @@ class GSheetExtensions(GSheetBase):
                     if item == '':
                         continue
                     itm = safe_cast(item, int)
+                    itm = process_gsheet_cell(itm)
                     if itm is not None:
                         stdext[col] = itm
                     else:
                         print("Invalid entry in worksheet {} for {}={}, column {}: {}".format(sheet_name, self.id_column, _id, col, item))
         return linked
     
-    def get_all_extensions(self):
+    def get_all_extensions(self, process_gsheet_cell=lambda cell: Time(parse=cell)):
         # worksheets = self.sheets.worksheets()
         worksheets = safe_gspread_call(self.sheets.worksheets)
         extensions = {}
         for ws in worksheets:
             title = ws.title
             if title not in self.ignore_sheets:
-                data = self.get_sheet_extensions(title)
+                data = self.get_sheet_extensions(title, process_gsheet_cell=process_gsheet_cell)
                 if data is None:
                     print("Could not load the extensions for sheet {}".format(title))
                     continue
@@ -118,7 +119,9 @@ def safe_cast(val, to_type, default=None):
         return default
 
 class Time:
-    def __init__(self, seconds=0, minutes=0, hours=0, days=0, sign=0):
+    def __init__(self, seconds=0, minutes=0, hours=0, days=0, sign=0, parse=None):
+        if parse is not None:
+            raise NotImplementedError("Parsing a string to time is not implemented yet!")
         if seconds < 0 or minutes < 0 or hours < 0 or days < 0:
             sign = -1
         self.sign = sign
@@ -164,6 +167,7 @@ class Time:
             if t < 0:
                 return Time(seconds=t * -1, sign=-1)
             return Time(seconds=t)
+        import ipdb; ipdb.set_trace()
         raise NotImplementedError()
 
     def __rsub__(self, other):
@@ -182,7 +186,7 @@ class Time:
         raise NotImplementedError()
 
     def __rmul__(self, other):
-        return self.__mul__
+        return self.__mul__(other)
 
 
     def __str__(self):

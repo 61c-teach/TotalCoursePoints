@@ -8,6 +8,7 @@ from .utils import GSheetExtensions, Time
 import csv
 import json
 import datetime
+import pytz
 
 NAME_MARKER = "Name"
 EMAIL_MARKER = "Email"
@@ -16,13 +17,14 @@ SECRET_MARKER = "Secret"
 EXTENSIONS_MARKER = "Extensions"
 
 class Classroom:
-    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None):
+    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles")):
         self.grade_bins = grade_bins
         self.categories = categories
         self.students = students
         self.name = name
         self.class_id = class_id
         self.gsheets_grades = gsheets_grades
+        self.timezone = timezone
         self.set_time_now()
         self.reset_comment()
         self.reset_welcome()
@@ -37,7 +39,7 @@ class Classroom:
         self.welcome_message = ""
     
     def get_welcome(self):
-        return self.welcome_message + f"[INFO]: The last calculation was at {self.get_time()}\n\n"
+        return self.welcome_message + f"[INFO]: The last calculation was at {self.get_localized_time()}\n\n"
 
     def append_comment(self, *args, sep=' ', end='\n'):
         self.global_comment += sep.join(args) + end
@@ -48,8 +50,11 @@ class Classroom:
     def get_comment(self):
         return self.global_comment
     
-    def get_time(self):
+    def get_raw_time(self):
         return self.time
+    
+    def get_localized_time(self):
+        return self.timezone.localize(self.time)
     
     def set_time(self, time):
         self.time = time
@@ -135,9 +140,14 @@ class Classroom:
         """
         # Since we are making assignments load data when they get created, we should not be calling this.
         # self.load_assignment_data()
+        print("Processing classroom data...")
+        print("Matching assignments to students...")
         self.match_assignments_to_students()
+        print("Applying extensions...")
         self.apply_extensions(with_gsheet_extensions=with_gsheet_extensions)
+        print("Applying slip days...")
         self.apply_slip_days()
+        print("Done Processing Classroom Data!")
 
     def load_assignment_data(self):
         for category in self.categories.values():
@@ -155,7 +165,7 @@ class Classroom:
         if with_gsheet_extensions is not None:
             try:
                 gse = GSheetExtensions(with_gsheet_extensions)
-                extensions = gse.get_all_extensions()
+                extensions = gse.get_all_extensions(process_gsheet_cell=process_gsheet_cell)
                 if extensions is not None:
                     for sid, exts in extensions.items():
                         student = self.get_student(str(sid))
@@ -178,6 +188,8 @@ class Classroom:
                 traceback.print_exc()
                 print(e)
         for student in self.students:
+            # if str(student.sid) == "3031857271":
+            #     import ipdb; ipdb.set_trace()
             student.apply_extensions()
 
     def apply_slip_days(self):
