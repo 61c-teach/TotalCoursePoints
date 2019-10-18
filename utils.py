@@ -194,7 +194,7 @@ class Time:
     def __repr__(self):
         return self.__str__()
     
-    def get_count(self, interval: Time):
+    def get_count(self, interval: "Time"):
         count = 0
         if self.get_seconds() == 0:
             return count
