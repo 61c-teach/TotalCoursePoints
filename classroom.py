@@ -60,7 +60,7 @@ class Classroom:
         self.time = time
 
     def set_time_now(self):
-        self.time = datetime.datetime.now()
+        self.time = pytz.utc.localize(datetime.datetime.utcnow())
 
     def __repr__(self):
         return self.__str__()
