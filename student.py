@@ -6,10 +6,11 @@ import json
 from . import GradeBins
 
 class Student:
-    def __init__(self, name: str, sid: str, email: str, extensionData: dict={}, secret: str=None):
+    def __init__(self, name: str, sid: str, email: str, active_student: bool=True, extensionData: dict={}, secret: str=None):
         self.name = name
         self.sid = str(sid)
         self.email = email
+        self.active_student = active_student
         self.categoryData = {}
         self.extensionData = extensionData
         # FIXME Parse extension data!
@@ -65,6 +66,12 @@ class Student:
         b = grade_bins.in_bin(self.total_points())
         return b.id
 
+    def get_approx_grade_id(self, c) -> str:
+        cur_score = self.total_points()
+        cur_max_score = c.get_total_possible(only_inputted=True)
+        b = c.grade_bins.relative_bin(cur_score, cur_max_score)
+        return b.id
+
     def get_approx_grade(self, c) -> str:
         cur_score = self.total_points()
         cur_max_score = c.get_total_possible(only_inputted=True)
@@ -72,8 +79,6 @@ class Student:
         return f"You are on track for a(n) {b.id} based off of the {cur_max_score} points entered."
 
     def apply_extensions(self):
-        # if self.sid == "3031857271":
-        #     import ipdb; ipdb.set_trace()
         for ext_cat_key, value in self.extensionData.items():
             cat = self.categoryData.get(ext_cat_key)
             if cat is None:

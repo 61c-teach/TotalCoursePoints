@@ -86,6 +86,10 @@ class Category:
         for a in self.assignments:
             a_data.append(a.get_student_data(student))
         return StudentCategoryData(self, a_data)
+    
+    def gen_active_students_scores(self, c: "Classroom"):
+        for a in self.assignments:
+            a.gen_active_students_scores(c)
 
 
 class StudentCategoryData:

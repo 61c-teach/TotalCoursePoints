@@ -122,6 +122,14 @@ class Time:
     def __init__(self, seconds=0, minutes=0, hours=0, days=0, sign=0, parse=None):
         if parse is not None:
             raise NotImplementedError("Parsing a string to time is not implemented yet!")
+        if seconds is None:
+            seconds = 0
+        if minutes is None:
+            minutes = 0
+        if hours is None:
+            hours = 0
+        if days is None:
+            days = 0
         if seconds < 0 or minutes < 0 or hours < 0 or days < 0:
             sign = -1
         self.sign = sign

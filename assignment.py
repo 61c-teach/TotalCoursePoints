@@ -14,6 +14,7 @@ NAME_MARKER = "Name"
 EMAIL_MARKER = "Email"
 DAYS_LATE_MAKER = "Lateness (H:M:S)"
 SCORE_MARKER = "Total Score"
+STATUS_MARKER = "Status"
 
 class Assignment:
     default_gsheet_id = None
@@ -90,6 +91,7 @@ class Assignment:
         self.hidden = hidden or category.hidden
         self.data = {}
         self.scores = []
+        self.all_scores = []
         self.data_loaded = True
         self.additional_points = additional_points
         if gsheets_grades is None:
@@ -150,7 +152,7 @@ class Assignment:
                                     t = Time()
                         time_late = t
                 sad = StudentAssignmentData(score, time_late, name, sid, email, self)
-                self.scores.append(sad.score)
+                self.all_scores.append(sad.score)
                 dat = self.data.get(sid)
                 if dat is None:
                     self.data[sid] = sad
@@ -203,21 +205,23 @@ class Assignment:
                 return self.category.course_points / sum([1 for a in self.category.assignments if a.percentage is True])
             return self.category.course_points * self.percentage
 
-    def get_rank(self, score: float) -> tuple:
+    def get_rank(self, score: float, use_all_scores: bool=False) -> tuple:
+        scores = self.all_scores if use_all_scores else self.scores
         rank = 1
-        for s in self.scores:
+        for s in scores:
             if s > score:
                 rank += 1
         return rank
     
-    def get_stats(self) -> tuple:
-        if len(self.scores) == 0:
+    def get_stats(self, use_all_scores: bool=False) -> tuple:
+        scores = self.all_scores if use_all_scores else self.scores
+        if len(scores) == 0:
             return 0, 0, 0, 0, 0
-        self.mean = numpy.mean(self.scores)
-        self.median = numpy.median(self.scores)
-        self.std = numpy.std(self.scores)
-        self.max = max(self.scores)
-        self.min = min(self.scores)
+        self.mean = numpy.mean(scores)
+        self.median = numpy.median(scores)
+        self.std = numpy.std(scores)
+        self.max = max(scores)
+        self.min = min(scores)
         return (self.mean, self.median, self.std, self.max, self.min)
     
     def get_stats_str(self) -> str:
@@ -225,6 +229,15 @@ class Assignment:
             return ""
         stats = self.get_stats()
         return "mean: {}\nmedian: {}\nstd dev: {}\nmax: {}\nmin: {}\n".format(*stats)
+    
+    def gen_active_students_scores(self, c: "Classroom"):
+        self.scores = []
+        for student in c.students:
+            sad = self.get_student_data(student)
+            if sad is None:
+                continue
+            if student.active_student:
+                self.scores.append(sad.score)
 
     def is_inputted(self, with_hidden=False):
         if self.hidden and not with_hidden:

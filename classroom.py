@@ -15,6 +15,7 @@ EMAIL_MARKER = "Email"
 SID_MARKER = "SID"
 SECRET_MARKER = "Secret"
 EXTENSIONS_MARKER = "Extensions"
+ACTIVESTUDENT_MARKER = "InCanvas"
 
 class Classroom:
     def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles")):
@@ -115,6 +116,10 @@ class Classroom:
                 if sid is None:
                     print("Row does not have a SID! {}".format(row))
                     continue
+                active_student = str(row.get(ACTIVESTUDENT_MARKER))
+                if sid is None:
+                    print("Row does not have active student {}".format(row))
+                    continue
                 secret = row.get(SECRET_MARKER)
                 extension = row.get(EXTENSIONS_MARKER)
                 if extension:
@@ -124,7 +129,7 @@ class Classroom:
                         print(exc)
                         print("Could not load extensions for student {} with sid {}! Here is the extension data: {}".format(name, sid, extension))
                         extension = None
-                s = Student(name, sid, email, extensionData=extension, secret=secret)
+                s = Student(name, sid, email, active_student=active_student == "True", extensionData=extension, secret=secret)
                 self.add_student(s)
 
     def get_total_possible(self, with_hidden=False, only_inputted=False) -> int:
@@ -161,6 +166,7 @@ class Classroom:
                 # ipdb.set_trace()
                 cat_data = cat.get_student_data(student)
                 student.add_category_data(cat_data)
+                cat.gen_active_students_scores(self)
 
     def apply_extensions(self, with_gsheet_extensions=None, process_gsheet_cell=lambda cell: Time(days=cell)):
         if with_gsheet_extensions is not None:
@@ -206,7 +212,16 @@ class Classroom:
 
     def print_class_statistics(self):
         """This will print things like how many students, how many of each grade, etc...."""
-        pass
+        grade_bin_counts = {}
+        for student in self.students:
+            if student.active_student:
+                gb = student.get_approx_grade_id(self)
+                if gb not in grade_bin_counts:
+                    grade_bin_counts[gb] = 1
+                else:
+                    grade_bin_counts[gb] += 1
+        gbc_str = [f"{gbin}: {count}" for gbin, count in grade_bin_counts].join("\n")
+        print(f"Number of students per grade bin: {gbc_str}")
 
     def dump_student_results(self, filename: str) -> None:
         """This function will dump the students in the class in a csv file."""
