@@ -16,6 +16,8 @@ DAYS_LATE_MAKER = "Lateness (H:M:S)"
 SCORE_MARKER = "Total Score"
 STATUS_MARKER = "Status"
 
+STATUS_IS_GRADED = "Graded"
+
 class Assignment:
     default_gsheet_id = None
     default_gsheet_base = None
@@ -153,6 +155,9 @@ class Assignment:
                         time_late = t
                 sad = StudentAssignmentData(score, time_late, name, sid, email, self)
                 self.all_scores.append(sad.score)
+                is_graded = row.get(STATUS_MARKER) == STATUS_IS_GRADED
+                if is_graded:
+                    self.scores.append(sad.score)
                 dat = self.data.get(sid)
                 if dat is None:
                     self.data[sid] = sad
@@ -231,6 +236,8 @@ class Assignment:
         return "mean: {}\nmedian: {}\nstd dev: {}\nmax: {}\nmin: {}\n".format(*stats)
     
     def gen_active_students_scores(self, c: "Classroom"):
+        return
+        # Changed this to graded submissions
         self.scores = []
         for student in c.students:
             sad = self.get_student_data(student)
