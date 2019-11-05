@@ -221,15 +221,20 @@ class Classroom:
                 else:
                     grade_bin_counts[gb] += 1
         gbc_str = ""
-        for gb in ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"]:
+        total_pts = 0
+        total_count = 0
+        for gb, pts in [("A+", 4), ("A", 4), ("A-", 3.7), ("B+", 3.3), ("B", 3), ("B-", 2.7), ("C+", 2.3), ("C", 2), ("C-", 1.7), ("D+", 1.3), ("D", 1), ("D-", 0.7), ("F", 0)]:
             if gb in grade_bin_counts:
                 count = grade_bin_counts[gb]
+                total_count += count
+                total_pts += count * pts
                 gbc_str += f"{gb}: {count}\n"
                 del grade_bin_counts[gb]
         extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
         if extra != "":
             gbc_str += f"\n{extra}"
-        print(f"Number of students per grade bin:\n{gbc_str}")
+        print(f"Number of students per grade bin:\n{gbc_str}\n")
+        print(f"Class average: {total_pts / total_count}\n")
 
     def dump_student_results(self, filename: str) -> None:
         """This function will dump the students in the class in a csv file."""
