@@ -62,18 +62,22 @@ class Student:
     def get_category_data(self, category: Category) -> Category:
         return self.categoryData.get(category.name)
 
-    def get_grade(self, grade_bins: GradeBins) -> str:
-        b = grade_bins.in_bin(self.total_points())
+    def get_total_points_with_class(self, c) -> float:
+        return self.total_points() + c.get_raw_additional_pts()
+
+    def get_grade(self, c) -> str:
+        grade_bins = c.grade_bins
+        b = grade_bins.in_bin(self.get_total_points_with_class(c))
         return b.id
 
     def get_approx_grade_id(self, c) -> str:
-        cur_score = self.total_points()
+        cur_score = self.get_total_points_with_class(c)
         cur_max_score = c.get_total_possible(only_inputted=True)
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
         return b.id
 
     def get_approx_grade(self, c) -> str:
-        cur_score = self.total_points()
+        cur_score = self.get_total_points_with_class(c)
         cur_max_score = c.get_total_possible(only_inputted=True)
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
         return f"You are on track for a(n) {b.id} based off of the {cur_max_score} points entered."
@@ -95,10 +99,10 @@ class Student:
 
     def main_results_str(self, c):
         if c.all_inputted():
-            grade_info = self.get_grade(c.grade_bins)
+            grade_info = self.get_grade(c)
         else:
             grade_info = self.get_approx_grade(c)
-        return "{}{}SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(c.get_welcome(), c.get_comment(), self.sid, self.email, self.total_points(), c.get_total_possible(), grade_info)
+        return "{}{}SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(c.get_welcome(), c.get_comment(), self.sid, self.email, self.get_total_points_with_class(c), c.get_total_possible(), grade_info)
 
     def dump_data(self, results_file: str, data: dict) -> None:
         jsondata = json.dumps(data, ensure_ascii=False)
@@ -108,7 +112,7 @@ class Student:
     def dump_str(self, c):
         tests = []
         results = {
-            "score":self.total_points(),
+            "score":self.get_total_points_with_class(c),
             "tests":tests
         }
         tests.append({"name":"Total", "output": self.main_results_str(c)})

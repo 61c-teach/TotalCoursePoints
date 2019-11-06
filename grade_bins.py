@@ -38,8 +38,9 @@ class Max:
 
 class Bin:
     """[min, max)"""
-    def __init__(self, id: str, min: float, max: float):
+    def __init__(self, id: str, gpa_value: float, min: float, max: float):
         self.id = id
+        self.gpa_value = gpa_value
         self.min = min
         self.max = max
 
@@ -48,6 +49,9 @@ class Bin:
 
     def __str__(self):
         return "{}: [{}, {})".format(self.id, self.min, self.max)
+    
+    def get_gpa_value(self):
+        return self.gpa_value
     
     def in_bin(self, value: float) -> bool:
         if self.min is None and self.max is None:
@@ -108,6 +112,12 @@ class GradeBins:
             del self.bins[id]
             return True
         return False
+    
+    def get_bins(self) -> [Bin]:
+        return list(self.bins.values())
+
+    def get_bin(self, id: str) -> Bin:
+        return self.bins.get(id)
 
     def in_bin(self, value: float) -> Bin:
         for b in self.bins.values():

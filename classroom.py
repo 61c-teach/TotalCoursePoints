@@ -18,7 +18,7 @@ EXTENSIONS_MARKER = "Extensions"
 ACTIVESTUDENT_MARKER = "InCanvas"
 
 class Classroom:
-    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles")):
+    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles"), raw_additional_pts: float=0):
         self.grade_bins = grade_bins
         self.categories = categories
         self.students = students
@@ -26,6 +26,7 @@ class Classroom:
         self.class_id = class_id
         self.gsheets_grades = gsheets_grades
         self.timezone = timezone
+        self.raw_additional_pts = raw_additional_pts
         self.set_time_now()
         self.reset_comment()
         self.reset_welcome()
@@ -63,6 +64,12 @@ class Classroom:
 
     def set_time_now(self):
         self.time = datetime.datetime.utcnow()
+
+    def get_raw_additional_pts(self):
+        return self.raw_additional_pts
+    
+    def set_raw_additional_pts(self, pts: float):
+        self.raw_additional_pts = pts
 
     def __repr__(self):
         return self.__str__()
@@ -209,9 +216,8 @@ class Classroom:
                 return False
         return True
 
-    def get_class_statistics_str(self):
-        """This will print things like how many students, how many of each grade, etc...."""
-        grade_bin_counts = {"A+":0, "A":0, "A-":0, "B+":0, "B":0, "B-":0, "C+":0, "C":0, "C-":0, "D":0, "F":0}
+    def get_grade_bins_count(self):
+        grade_bin_counts = {}
         for student in self.students:
             if student.active_student:
                 gb = student.get_approx_grade_id(self)
@@ -219,26 +225,59 @@ class Classroom:
                     grade_bin_counts[gb] = 1
                 else:
                     grade_bin_counts[gb] += 1
-        gbc_str = ""
-        total_pts = 0
+        return grade_bin_counts
+
+    def get_class_gpa_average(self, grade_bins_count=None):
+        if grade_bins_count is None:
+            grade_bins_count = self.get_grade_bins_count()
         total_count = 0
-        for gb, pts in [("A+", 4), ("A", 4), ("A-", 3.7), ("B+", 3.3), ("B", 3), ("B-", 2.7), ("C+", 2.3), ("C", 2), ("C-", 1.7), ("D+", 1.3), ("D", 1), ("D-", 0.7), ("F", 0)]:
+        total_pts = 0
+        for gbin in self.grade_bins.get_bins():
+            gbid = gbin.id
+            if gbid in grade_bins_count:
+                count = grade_bins_count[gbid]
+                total_count += count
+                total_pts += gbin.get_gpa_value() * count
+        if total_count == 0:
+            return 0
+        return total_pts / total_count
+
+    def get_class_statistics_str(self, grade_bin_counts=None):
+        """This will print things like how many students, how many of each grade, etc...."""
+        if grade_bin_counts is None:
+            grade_bin_counts = self.get_grade_bins_count()
+        ave_gpa = self.get_class_gpa_average(grade_bin_counts)
+        gbc_str = ""
+        for gb in ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]:
             if gb in grade_bin_counts:
                 count = grade_bin_counts[gb]
-                total_count += count
-                total_pts += count * pts
                 gbc_str += f"{gb}: {count}\n"
                 del grade_bin_counts[gb]
         extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
         if extra != "":
             gbc_str += f"\n{extra}"
-        return f"Number of students per grade bin:\n{gbc_str}\nClass average: {total_pts / total_count}\n"
+        return f"Number of students per grade bin:\n{gbc_str}\nClass average: {ave_gpa}\n"
 
     def print_class_statistics(self):
         print(self.get_class_statistics_str())
+
+    
+    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20):
+        base_raw_points = self.get_raw_additional_pts()
+        for i in range(start_pts, 1 + max_pts):
+            self.set_raw_additional_pts(i)
+            gbc = self.get_grade_bins_count()
+            ave_gpa = self.get_class_gpa_average(gbc)
+            print(f"Stats when adding {i} points(s):\n{self.get_class_statistics_str(gbc)}")
+            if ave_gpa >= min_ave_gpa:
+                print("Found the minimum number of points to reach the ave gpa wanted!")
+                self.set_raw_additional_pts(base_raw_points)
+                return i
+        print("Could not reach the minimum average gpa for the given number of iterations!")
+        self.set_raw_additional_pts(base_raw_points)
+        return False
         
 
     def dump_student_results(self, filename: str) -> None:
         """This function will dump the students in the class in a csv file."""
-        
         pass
