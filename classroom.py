@@ -209,8 +209,7 @@ class Classroom:
                 return False
         return True
 
-
-    def print_class_statistics(self):
+    def get_class_statistics_str(self):
         """This will print things like how many students, how many of each grade, etc...."""
         grade_bin_counts = {"A+":0, "A":0, "A-":0, "B+":0, "B":0, "B-":0, "C+":0, "C":0, "C-":0, "D":0, "F":0}
         for student in self.students:
@@ -233,8 +232,11 @@ class Classroom:
         extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
         if extra != "":
             gbc_str += f"\n{extra}"
-        print(f"Number of students per grade bin:\n{gbc_str}\n")
-        print(f"Class average: {total_pts / total_count}\n")
+        return f"Number of students per grade bin:\n{gbc_str}\nClass average: {total_pts / total_count}\n"
+
+    def print_class_statistics(self):
+        return self.get_class_statistics_str()
+        
 
     def dump_student_results(self, filename: str) -> None:
         """This function will dump the students in the class in a csv file."""
