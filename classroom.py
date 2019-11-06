@@ -235,7 +235,7 @@ class Classroom:
         return f"Number of students per grade bin:\n{gbc_str}\nClass average: {total_pts / total_count}\n"
 
     def print_class_statistics(self):
-        return self.get_class_statistics_str()
+        print(self.get_class_statistics_str())
         
 
     def dump_student_results(self, filename: str) -> None:
