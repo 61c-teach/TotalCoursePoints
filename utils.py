@@ -79,7 +79,7 @@ class GSheetExtensions(GSheetBase):
             return None
         linked = {}
         for row in data:
-            _id = row[self.id_column]
+            _id = str(row[self.id_column])
             stdext = {}
             linked[_id] = stdext
             for col in row.keys():
