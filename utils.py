@@ -279,3 +279,33 @@ class GracePeriod:
     def __init__(self, time: Time=Time(), apply_to_all_late_time=False):
         self.time: Time = time
         self.apply_to_all_late_time: bool = apply_to_all_late_time
+
+def bar_plot_str(data: {str:float}, increment_divisor: int=25, chunk_size: int=8) -> str:
+    max_value = max(count for count in data.values())
+    increment = max_value / increment_divisor
+
+    longest_label_length = max(len(label) for label in data.keys())
+
+    ret_str = ""
+
+    for label, count in data.items():
+
+        # The ASCII block elements come in chunks of 8, so we work out how
+        # many fractions of 8 we need.
+        # https://en.wikipedia.org/wiki/Block_Elements
+        bar_chunks, remainder = divmod(int(count * chunk_size / increment), chunk_size)
+
+        # First draw the full width chunks
+        bar = '█' * bar_chunks
+
+        # Then add the fractional part.  The Unicode code points for
+        # block elements are (8/8), (7/8), (6/8), ... , so we need to
+        # work backwards.
+        if remainder > 0:
+            bar += chr(ord('█') + (chunk_size - remainder))
+
+        # If the bar is empty, add a left one-eighth block
+        bar = bar or  '▏'
+
+        ret_str += f"{label.ljust(longest_label_length)} ▏ {count:#4d} {bar}\n"
+    return ret_str

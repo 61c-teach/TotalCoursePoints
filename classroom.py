@@ -4,11 +4,12 @@ This is the classroom and its info.
 from .assignment import Category
 from .grade_bins import GradeBins
 from .student import Student
-from .utils import GSheetExtensions, Time
+from .utils import GSheetExtensions, Time, bar_plot_str
 import csv
 import json
 import datetime
 import pytz
+from collections import OrderedDict
 
 NAME_MARKER = "Name"
 EMAIL_MARKER = "Email"
@@ -242,20 +243,34 @@ class Classroom:
             return 0
         return total_pts / total_count
 
-    def get_class_statistics_str(self, grade_bin_counts=None):
+    def get_class_statistics_str(self, grade_bin_counts=None, graph=True):
         """This will print things like how many students, how many of each grade, etc...."""
+        normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
         if grade_bin_counts is None:
             grade_bin_counts = self.get_grade_bins_count()
         ave_gpa = self.get_class_gpa_average(grade_bin_counts)
+        ordered_grades = OrderedDict()
+        for ngb in normal_grade_bins:
+            if ngb in grade_bin_counts:
+                ordered_grades[ngb] = grade_bin_counts[ngb]
+            else:
+                ordered_grades[ngb] = 0
+        for gb, val in grade_bin_counts.items():
+            if gb in normal_grade_bins:
+                continue
+            ordered_grades[gb] = val
         gbc_str = ""
-        for gb in ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]:
-            if gb in grade_bin_counts:
-                count = grade_bin_counts[gb]
-                gbc_str += f"{gb}: {count}\n"
-                del grade_bin_counts[gb]
-        extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
-        if extra != "":
-            gbc_str += f"\n{extra}"
+        if graph:
+            gbc_str = bar_plot_str(ordered_grades)
+        else:
+            for gb in normal_grade_bins:
+                if gb in grade_bin_counts:
+                    count = grade_bin_counts[gb]
+                    gbc_str += f"{gb}: {count}\n"
+                    del grade_bin_counts[gb]
+            extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
+            if extra != "":
+                gbc_str += f"\n{extra}"
         return f"Number of students per grade bin:\n{gbc_str}\nClass average: {ave_gpa}\n"
 
     def print_class_statistics(self):
