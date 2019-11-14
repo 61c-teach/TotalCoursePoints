@@ -280,9 +280,9 @@ class GracePeriod:
         self.time: Time = time
         self.apply_to_all_late_time: bool = apply_to_all_late_time
 
-def bar_plot_str(data: {str:float}, increment_divisor: int=25, chunk_size: int=8) -> str:
+def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8) -> str:
     max_value = max(count for count in data.values())
-    increment = max_value / increment_divisor
+    increment = max_value / number_of_bins
 
     longest_label_length = max(len(label) for label in data.keys())
 
