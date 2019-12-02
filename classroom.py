@@ -10,6 +10,7 @@ import json
 import datetime
 import pytz
 from collections import OrderedDict
+import sys
 
 NAME_MARKER = "Name"
 EMAIL_MARKER = "Email"
@@ -293,6 +294,26 @@ class Classroom:
         return False
         
 
-    def dump_student_results(self, filename: str) -> None:
+    def dump_student_results(self, filename: str, approx_grade=False, skip_non_roster=True) -> None:
         """This function will dump the students in the class in a csv file."""
-        pass
+        csv_columns = ["name", "sid", "email", "grade", "score"]
+        with open(filename, "w+") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            base_str = f"Dumping student {{}} / {len(self.students)} ({{}})"
+            print(base_str.format(0, None))
+            counter = 0
+            for student in self.students:
+                counter += 1
+                sys.stdout.write("\033[F\033[K")
+                print(base_str.format(counter, student.name))
+                if not student.active_student:
+                    continue
+                sdata = student.get_raw_data(self, approx_grade=approx_grade)
+                d = {}
+                for idv in csv_columns:
+                    d[idv] = sdata[idv]
+                writer.writerow(d)
+            
+            sys.stdout.write("\033[F\033[K")
+            print("Finished dumping classroom data!")

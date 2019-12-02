@@ -65,13 +65,17 @@ class Student:
     def get_total_points_with_class(self, c) -> float:
         return self.total_points() + c.get_raw_additional_pts()
 
-    def get_grade(self, c) -> str:
+    def get_grade(self, c, score=None) -> str:
+        if score is None:
+            score = self.get_total_points_with_class(c)
         grade_bins = c.grade_bins
-        b = grade_bins.in_bin(self.get_total_points_with_class(c))
+        b = grade_bins.in_bin(score)
         return b.id
 
-    def get_approx_grade_id(self, c) -> str:
-        cur_score = self.get_total_points_with_class(c)
+    def get_approx_grade_id(self, c, score=None) -> str:
+        if score is None:
+            score = self.get_total_points_with_class(c)
+        cur_score = score
         cur_max_score = c.get_total_possible(only_inputted=True)
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
         return b.id
@@ -127,6 +131,20 @@ class Student:
     def dump_result(self, c):
         results = self.dump_str(c)
         self.dump_data("/autograder/results/results.json", results)
+
+    def get_raw_data(self, c, approx_grade: bool=False):
+        score = self.get_total_points_with_class(c)
+        data = {
+            "name": self.name,
+            "sid": self.sid,
+            "email": self.email,
+            "grade": self.get_approx_grade_id(c, score=score) if approx_grade else self.get_grade(c),
+            "score": score
+        }
+        for cat in self.categoryData.values():
+            for assign in cat.assignments_data:
+                data[f"{cat.category.name}/{assign.assignment.id}"] = assign.get_course_points()
+        return data
         
                 
 from .assignment import Assignment, StudentAssignmentData
