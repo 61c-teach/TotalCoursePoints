@@ -16,7 +16,8 @@ class Category:
         show_rank: bool = True,
         out_of: float=None,
         grace_period: GracePeriod=None,
-        hidden: bool=False
+        hidden: bool=False,
+        extra_credit: bool=False,
     ):
         init_str = f"Initializing category {name}..."
         init_str_done = init_str + "Done!"
@@ -40,6 +41,7 @@ class Category:
         self.blanket_late_penalty = blanket_late_penalty
         self.grace_period = grace_period
         self.hidden = hidden
+        self.extra_credit = extra_credit
         print(init_str_done)
 
     def add_assignments(self, assignments: list):
@@ -58,6 +60,8 @@ class Category:
             assignment.load_data()
 
     def get_total_possible(self, with_hidden=False, only_inputted=False):
+        if self.extra_credit:
+            return 0
         if self.course_points is not None:
             points = self.course_points
             if only_inputted:

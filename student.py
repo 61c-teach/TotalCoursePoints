@@ -63,7 +63,7 @@ class Student:
         return self.categoryData.get(category.name)
 
     def get_total_points_with_class(self, c) -> float:
-        return self.total_points() + c.get_raw_additional_pts()
+        return self.total_points() + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / c.get_total_possible()))
 
     def get_grade(self, c, score=None) -> str:
         if score is None:

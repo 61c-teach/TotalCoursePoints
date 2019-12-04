@@ -49,6 +49,9 @@ class Bin:
 
     def __str__(self):
         return "{}: [{}, {})".format(self.id, self.min, self.max)
+
+    def copy(self):
+        return Bin(self.id, self.gpa_value, self.min, self.max)
     
     def get_gpa_value(self):
         return self.gpa_value
@@ -88,6 +91,12 @@ class GradeBins:
             self.pass_threshold = pass_threshold
         else:
             self.pass_threshold = Max()
+    
+    def copy(self):
+        bins_copy = []
+        for b in self.bins.values():
+            bins_copy.append(b.copy())
+        return GradeBins(bins_copy, self.pass_threshold, self.normal_max_points)
 
     def __repr__(self):
         return self.__str__()
@@ -135,3 +144,12 @@ class GradeBins:
             if b.in_relative_bin(score / max_score, self.normal_max_points):
                 return b
         return None
+
+    def increment_A_plus(self, amt: float=1) -> bool:
+        if "A+" in self.bins and "A" in self.bins:
+            APlus = self.bins["A+"]
+            A = self.bins["A"]
+            APlus.min += amt
+            A.max += amt
+            return True
+        return False

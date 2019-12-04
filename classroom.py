@@ -149,13 +149,17 @@ class Classroom:
             points += cat.get_total_possible(with_hidden=with_hidden, only_inputted=only_inputted)
         return points
 
-    def process(self, with_gsheet_extensions=None):
+    def process(self, with_gsheet_extensions=None, only_active_students=True):
         """
         This function will go through each assigment and get the score for each student.
         """
         # Since we are making assignments load data when they get created, we should not be calling this.
         # self.load_assignment_data()
         print("Processing classroom data...")
+        if only_active_students:
+            print("Generating active student data...")
+            for cat in self.categories.values():
+                cat.gen_active_students_scores(self)
         print("Matching assignments to students...")
         self.match_assignments_to_students()
         print("Applying extensions...")
@@ -171,11 +175,8 @@ class Classroom:
     def match_assignments_to_students(self):
         for student in self.students:
             for cat in self.categories.values():
-                # import ipdb
-                # ipdb.set_trace()
                 cat_data = cat.get_student_data(student)
                 student.add_category_data(cat_data)
-                cat.gen_active_students_scores(self)
 
     def apply_extensions(self, with_gsheet_extensions=None, process_gsheet_cell=lambda cell: Time(days=cell)):
         if with_gsheet_extensions is not None:
@@ -278,9 +279,13 @@ class Classroom:
         print(self.get_class_statistics_str())
 
     
-    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20):
+    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, adjust_a_plus: bool=True):
+        orig_bins = self.grade_bins
         base_raw_points = self.get_raw_additional_pts()
         for i in range(start_pts, 1 + max_pts):
+            if adjust_a_plus:
+                self.grade_bins = orig_bins.copy()
+                self.grade_bins.increment_A_plus(i)
             self.set_raw_additional_pts(i)
             gbc = self.get_grade_bins_count()
             ave_gpa = self.get_class_gpa_average(gbc)
@@ -288,9 +293,11 @@ class Classroom:
             if ave_gpa >= min_ave_gpa:
                 print("Found the minimum number of points to reach the ave gpa wanted!")
                 self.set_raw_additional_pts(base_raw_points)
+                self.grade_bins = orig_bins
                 return i
         print("Could not reach the minimum average gpa for the given number of iterations!")
         self.set_raw_additional_pts(base_raw_points)
+        self.grade_bins = orig_bins
         return False
         
 

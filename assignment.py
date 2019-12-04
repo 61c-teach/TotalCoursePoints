@@ -43,6 +43,7 @@ class Assignment:
         additional_points: float=0,
         grace_period: GracePeriod=None,
         gsheets_grades=None,
+        extra_credit: bool=None,
     ):
         tmp = f": {name}" if name is not None else ""
         init_str = f"Initializing assignment {id}{tmp}..."
@@ -72,6 +73,9 @@ class Assignment:
         if show_rank is None:
             show_rank = category.show_rank
         self.show_rank = show_rank
+        if extra_credit is None:
+            extra_credit = category.extra_credit
+        self.extra_credit = extra_credit
         self.comment = comment
         self.allowed_slip_count = allowed_slip_count
         if slip_interval is None:
@@ -203,6 +207,8 @@ class Assignment:
         return dat
 
     def get_total_possible(self):
+        if self.extra_credit:
+            return 0
         if self.percentage is None:
             return self.course_points
         else:
@@ -236,7 +242,6 @@ class Assignment:
         return "mean: {}\nmedian: {}\nstd dev: {}\nmax: {}\nmin: {}\n".format(*stats)
     
     def gen_active_students_scores(self, c: "Classroom"):
-        return
         # Changed this to graded submissions
         self.scores = []
         for student in c.students:
