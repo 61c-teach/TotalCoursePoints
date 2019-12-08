@@ -67,7 +67,7 @@ class Category:
             if only_inputted:
                 points = 0
                 for a in self.assignments:
-                    if a.is_inputted(with_hidden=with_hidden):
+                    if a.is_inputted(with_hidden=with_hidden) and not a.extra_credit:
                         points += a.get_total_possible()
             return points
         points = 0

@@ -207,8 +207,8 @@ class Assignment:
         return dat
 
     def get_total_possible(self):
-        if self.extra_credit:
-            return 0
+        if self.extra_credit and not self.course_points:
+            return 1
         if self.percentage is None:
             return self.course_points
         else:
@@ -324,7 +324,7 @@ class StudentAssignmentData:
     def get_str(self):
         s = "{}[{}] {}\n{}{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment, self.get_comment())
         entered = False
-        if self.assignment.get_total_possible() == 0:
+        if self.assignment.get_total_possible() == 0 and not self.assignment.extra_credit:
             s += "This assignment is not worth any course points!"
             score = None
             course_points = None
