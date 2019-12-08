@@ -325,7 +325,7 @@ class StudentAssignmentData:
         s = "{}[{}] {}\n{}{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment, self.get_comment())
         entered = False
         if self.assignment.get_total_possible() == 0 and not self.assignment.extra_credit:
-            s += "This assignment is not worth any course points!"
+            s += "This assignment is not worth any course points!\n"
             score = None
             course_points = None
         elif not self.assignment.data_loaded:
@@ -333,7 +333,7 @@ class StudentAssignmentData:
             score = "-"
             course_points = "-"
         elif self.assignment.data_loaded and not self.data_found:
-            s += "Could not find a score for this assignment!"
+            s += "Could not find a score for this assignment!\n"
             entered = True
             score = 0
             course_points = 0
