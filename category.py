@@ -118,10 +118,10 @@ class StudentCategoryData:
     def __str__(self):
         return "Category: {}\nAssignments:\n{}".format(self.category.name, self.assignments_data)
 
-    def apply_optimal_slip_time(self):
+    def apply_optimal_slip_time(self, ignore_score=False):
         pass
 
-    def apply_ordered_slip_time(self):
+    def apply_ordered_slip_time(self, ignore_score=False):
         slip_time_left = self.category.max_slip_count
         if slip_time_left is None:
             return
@@ -130,7 +130,7 @@ class StudentCategoryData:
                 continue
             for assignment_data in self.assignments_data:
                 if assignment_data.assignment == assignment:
-                    if assignment_data.get_late_time().get_seconds() > 0:
+                    if assignment_data.get_late_time().get_seconds() > 0 and (assignment_data.score > 0 or ignore_score):
                         if assignment.allowed_slip_count is not None:
                             assignment_data.slip_time_used = min(assignment_data.get_num_late(), slip_time_left, assignment.allowed_slip_count)
                         else:
