@@ -105,10 +105,15 @@ class Assignment:
         try:
             self.load_file()
         except Exception as exc:
+            def check_error_type(e):
+                if isinstance(e, ValueError) and str(e) == "Invalid lateness column!":
+                    raise e from None
+            check_error_type(exc)
             if gsheets_grades is not None and gsheets_grades or gsheets_grades is None and self.use_gsheet_grades:
                 try:
                     self.load_gsheet(gsheets_grades)
                 except Exception as e:
+                    check_error_type(e)
                     print(f"Failed to load grades from gsheet for {id}")
                     self.data_loaded = False
             else:
@@ -143,20 +148,32 @@ class Assignment:
                 email = row.get(EMAIL_MARKER)
                 time_late = 0
                 lateness = row.get(DAYS_LATE_MAKER)
+                valid_lateness = True
                 if isinstance(lateness, str):
-                    lateness = lateness.split(':')
-                    if len(lateness) == 3:
-                        hours, minutes, seconds = [int(x) for x in lateness]
-                        t = Time(seconds=seconds, minutes=minutes, hours=hours)
-                        gp = self.grace_period
-                        if isinstance(gp, GracePeriod):
-                            if gp.apply_to_all_late_time:
-                                raise NotImplementedError()
-                            else:
-                                dif = t - gp.time
-                                if dif <= 0:
-                                    t = Time()
-                        time_late = t
+                    if lateness != "":
+                        lateness = lateness.split(':')
+                        if len(lateness) == 3:
+                            hours, minutes, seconds = [int(x) for x in lateness]
+                            t = Time(seconds=seconds, minutes=minutes, hours=hours)
+                            gp = self.grace_period
+                            if isinstance(gp, GracePeriod):
+                                if gp.apply_to_all_late_time:
+                                    raise NotImplementedError()
+                                else:
+                                    dif = t - gp.time
+                                    if dif <= 0:
+                                        t = Time()
+                            time_late = t
+                        else:
+                            valid_lateness = False
+                            print(f'Invalid lateness: {lateness}')
+                            raise ValueError(f"Invalid lateness column!")
+                else:
+                    if lateness is not None:
+                        valid_lateness = False
+                if not valid_lateness:
+                    print(f'Invalid lateness: {lateness}')
+                    raise ValueError(f"Invalid lateness column!")
                 sad = StudentAssignmentData(score, time_late, name, sid, email, self)
                 self.all_scores.append(sad.score)
                 is_graded = row.get(STATUS_MARKER) == STATUS_IS_GRADED
