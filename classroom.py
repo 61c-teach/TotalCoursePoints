@@ -221,9 +221,13 @@ class Classroom:
 
     def get_grade_bins_count(self):
         grade_bin_counts = {}
+        all_in = self.all_inputted()
         for student in self.students:
             if student.active_student:
-                gb = student.get_approx_grade_id(self)
+                if all_in:
+                    gb = student.get_grade(self)
+                else:
+                    gb = student.get_approx_grade_id(self)
                 if gb not in grade_bin_counts:
                     grade_bin_counts[gb] = 1
                 else:
