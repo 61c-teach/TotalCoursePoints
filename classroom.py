@@ -101,6 +101,9 @@ class Classroom:
         if c in self.categories:
             del self.categories[c]
 
+    def get_category(self, c: str):
+        return self.categories.get(c)
+
     def load_students_from_roster(self, f: str, only_load: str = None):
         """
         Reads a roster and creates students from each row.
@@ -283,22 +286,37 @@ class Classroom:
         print(self.get_class_statistics_str())
 
     
-    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, adjust_a_plus: bool=True):
+    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True):
         orig_bins = self.grade_bins
         base_raw_points = self.get_raw_additional_pts()
+        have_max_a_plus = max_a_plus == 0
+        a_plus_adjust = 0
         for i in range(start_pts, 1 + max_pts):
-            if adjust_a_plus:
+            if adjust_a_plus and max_a_plus is None:
                 self.grade_bins = orig_bins.copy()
                 self.grade_bins.increment_A_plus(i)
+            if have_max_a_plus:
+                a_plus_adjust += 1
+                print(f"Adjusting A+ bin by {a_plus_adjust} points.")
+                self.grade_bins = orig_bins.copy()
+                self.grade_bins.increment_A_plus(a_plus_adjust)
             self.set_raw_additional_pts(i)
             gbc = self.get_grade_bins_count()
+            a_plus = gbc.get("A+")
+            a_plus = 0 if a_plus is None else a_plus
             ave_gpa = self.get_class_gpa_average(gbc)
             print(f"Stats when adding {i} points(s):\n{self.get_class_statistics_str(gbc)}")
             if ave_gpa >= min_ave_gpa:
                 print("Found the minimum number of points to reach the ave gpa wanted!")
+                if max_a_plus is not None and a_plus_adjust > 0:
+                    print(f"The A+ bin must be shifted up by {a_plus_adjust} points!")
                 self.set_raw_additional_pts(base_raw_points)
                 self.grade_bins = orig_bins
                 return i
+            
+            if (not have_max_a_plus) and max_a_plus is not None and a_plus >= max_a_plus:
+                print("Max A+ reached!")
+                have_max_a_plus = True
         print("Could not reach the minimum average gpa for the given number of iterations!")
         self.set_raw_additional_pts(base_raw_points)
         self.grade_bins = orig_bins

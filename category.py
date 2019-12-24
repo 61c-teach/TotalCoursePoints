@@ -55,6 +55,12 @@ class Category:
         if assignment in self.assignments:
             self.assignments.remove(assignment)
 
+    def get_assignment(self, assign_name):
+        for a in self.assignments:
+            if a.id == assign_name:
+                return a
+        return None
+
     def load_assignment_data(self):
         for assignment in self.assignments:
             assignment.load_data()
