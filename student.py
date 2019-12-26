@@ -113,13 +113,15 @@ class Student:
         with open(results_file, "w") as f:
             f.write(jsondata)
 
-    def dump_str(self, c):
+    def dump_str(self, c, class_dist: bool=False):
         tests = []
         results = {
             "score":self.get_total_points_with_class(c),
             "tests":tests
         }
         tests.append({"name":"Total", "output": self.main_results_str(c)})
+        if class_dist:
+            tests.append({"name": "Class Stats", "output": c.get_class_statistics_str()})
         for cat in self.categoryData.values():
             if not cat.is_hidden():
                 tests.append({
@@ -128,8 +130,8 @@ class Student:
                 })
         return results
 
-    def dump_result(self, c):
-        results = self.dump_str(c)
+    def dump_result(self, c, class_dist: bool=False):
+        results = self.dump_str(c, class_dist=class_dist)
         self.dump_data("/autograder/results/results.json", results)
 
     def get_raw_data(self, c, approx_grade: bool=False):
