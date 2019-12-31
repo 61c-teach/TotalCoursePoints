@@ -280,9 +280,11 @@ class GracePeriod:
         self.time: Time = time
         self.apply_to_all_late_time: bool = apply_to_all_late_time
 
-def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8) -> str:
+def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8, add_percents=False) -> str:
     max_value = max(count for count in data.values())
     increment = max_value / number_of_bins
+
+    total = sum(data.values())
 
     longest_label_length = max(len(label) for label in data.keys())
 
@@ -306,6 +308,8 @@ def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8) -
 
         # If the bar is empty, add a left one-eighth block
         bar = bar or  '▏'
-
-        ret_str += f"{label.ljust(longest_label_length)} ▏ {count:#4d} {bar}\n"
+        ratio = str(round(count / total * 100, 1))
+        if len(ratio) <= 4:
+            ratio = (" " * (4 - len(ratio))) + ratio
+        ret_str += f"{label.ljust(longest_label_length)} ▏ ({ratio}%) {count:#4d} {bar}\n"
     return ret_str

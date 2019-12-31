@@ -44,9 +44,14 @@ class Student:
     def add_category_data(self, data: StudentCategoryData):
         self.categoryData[data.category.name] = data
 
-    def total_points(self, with_hidden=False):
+    def total_points(self, with_hidden=False, c=None):
+        ignore_categories = set([])
+        if c is not None:
+            ignore_categories = c.get_ignore_category()
         tp = 0
         for c in self.categoryData.values():
+            if c.category.name in ignore_categories:
+                continue
             tp += c.get_total_score(with_hidden=with_hidden)
         return tp
 
@@ -62,19 +67,19 @@ class Student:
     def get_category_data(self, category: Category) -> Category:
         return self.categoryData.get(category.name)
 
-    def get_total_points_with_class(self, c) -> float:
-        return self.total_points() + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / c.get_total_possible()))
+    def get_total_points_with_class(self, c, with_hidden=False) -> float:
+        return self.total_points(c=c, with_hidden=with_hidden) + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / c.get_total_possible()))
 
-    def get_grade(self, c, score=None) -> str:
+    def get_grade(self, c, score=None, with_hidden=False) -> str:
         if score is None:
-            score = self.get_total_points_with_class(c)
+            score = self.get_total_points_with_class(c, with_hidden=with_hidden)
         grade_bins = c.grade_bins
         b = grade_bins.in_bin(score)
         return b.id
 
-    def get_approx_grade_id(self, c, score=None) -> str:
+    def get_approx_grade_id(self, c, score=None, with_hidden=False) -> str:
         if score is None:
-            score = self.get_total_points_with_class(c)
+            score = self.get_total_points_with_class(c, with_hidden=with_hidden)
         cur_score = score
         cur_max_score = c.get_total_possible(only_inputted=True)
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
@@ -134,13 +139,13 @@ class Student:
         results = self.dump_str(c, class_dist=class_dist)
         self.dump_data("/autograder/results/results.json", results)
 
-    def get_raw_data(self, c, approx_grade: bool=False):
-        score = self.get_total_points_with_class(c)
+    def get_raw_data(self, c, approx_grade: bool=False, with_hidden=True):
+        score = self.get_total_points_with_class(c, with_hidden=with_hidden)
         data = {
             "name": self.name,
             "sid": self.sid,
             "email": self.email,
-            "grade": self.get_approx_grade_id(c, score=score) if approx_grade else self.get_grade(c),
+            "grade": self.get_approx_grade_id(c, score=score, with_hidden=with_hidden) if approx_grade else self.get_grade(c, with_hidden=with_hidden),
             "score": score
         }
         for cat in self.categoryData.values():

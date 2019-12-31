@@ -35,6 +35,16 @@ class Classroom:
         self.append_welcome(f"Welcome to the Total Course Points Autograder for [{class_id}] {name}!")
         self.append_welcome(f"This autograder is designed to increase the transparency of {class_id}'s grading.", end="\n\n")
         self.append_welcome(f"[WARN]: This is a prototype grade calculator so it may have bugs! Please report bugs to course staff if you see any.", end="\n\n")
+        self.ignore_categories = set([])
+
+    def add_ignore_category(self, name):
+        self.ignore_categories.add(name)
+    
+    def remove_ignore_category(self, name):
+        self.ignore_categories.remove(name)
+    
+    def get_ignore_category(self):
+        return self.ignore_categories
 
     def append_welcome(self, *args, sep=' ', end='\n'):
         self.welcome_message += sep.join(args) + end
@@ -222,24 +232,24 @@ class Classroom:
                 return False
         return True
 
-    def get_grade_bins_count(self):
+    def get_grade_bins_count(self, with_hidden=False):
         grade_bin_counts = {}
         all_in = self.all_inputted()
         for student in self.students:
             if student.active_student:
                 if all_in:
-                    gb = student.get_grade(self)
+                    gb = student.get_grade(self, with_hidden=with_hidden)
                 else:
-                    gb = student.get_approx_grade_id(self)
+                    gb = student.get_approx_grade_id(self, with_hidden=with_hidden)
                 if gb not in grade_bin_counts:
                     grade_bin_counts[gb] = 1
                 else:
                     grade_bin_counts[gb] += 1
         return grade_bin_counts
 
-    def get_class_gpa_average(self, grade_bins_count=None):
+    def get_class_gpa_average(self, grade_bins_count=None, with_hidden=False):
         if grade_bins_count is None:
-            grade_bins_count = self.get_grade_bins_count()
+            grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden)
         total_count = 0
         total_pts = 0
         for gbin in self.grade_bins.get_bins():
@@ -252,11 +262,11 @@ class Classroom:
             return 0
         return total_pts / total_count
 
-    def get_class_statistics_str(self, grade_bin_counts=None, graph=True):
+    def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False):
         """This will print things like how many students, how many of each grade, etc...."""
         normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
         if grade_bin_counts is None:
-            grade_bin_counts = self.get_grade_bins_count()
+            grade_bin_counts = self.get_grade_bins_count(with_hidden=with_hidden)
         ave_gpa = self.get_class_gpa_average(grade_bin_counts)
         ordered_grades = OrderedDict()
         for ngb in normal_grade_bins:
@@ -270,7 +280,7 @@ class Classroom:
             ordered_grades[gb] = val
         gbc_str = ""
         if graph:
-            gbc_str = bar_plot_str(ordered_grades)
+            gbc_str = bar_plot_str(ordered_grades, add_percents=True)
         else:
             for gb in normal_grade_bins:
                 if gb in grade_bin_counts:
@@ -280,13 +290,20 @@ class Classroom:
             extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
             if extra != "":
                 gbc_str += f"\n{extra}"
-        return f"Number of students per grade bin:\n{gbc_str}\nClass average: {ave_gpa}\n"
+        total = sum(ordered_grades.values())
+        As = round((ordered_grades["A+"] + ordered_grades["A"] + ordered_grades["A-"]) / total * 100, 1)
+        Bs = round((ordered_grades["B+"] + ordered_grades["B"] + ordered_grades["B-"]) / total * 100, 1)
+        Cs = round((ordered_grades["C+"] + ordered_grades["C"] + ordered_grades["C-"]) / total * 100, 1)
+        Ds = round((ordered_grades["D+"] + ordered_grades["D"] + ordered_grades["D-"]) / total * 100, 1)
+        Fs = round((ordered_grades["F"]) / total * 100, 1)
+        ratio_str = f"A: {As}%\nB: {Bs}%\nC: {Cs}%\nD: {Ds}%\nF: {Fs}%\n"
+        return f"Number of students per grade bin:\n{gbc_str}\nGrades Ratios:\n{ratio_str}\nClass average: {ave_gpa}\n"
 
-    def print_class_statistics(self):
-        print(self.get_class_statistics_str())
+    def print_class_statistics(self, with_hidden=False):
+        print(self.get_class_statistics_str(with_hidden=with_hidden))
 
     
-    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True):
+    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True, with_hidden=False):
         orig_bins = self.grade_bins
         base_raw_points = self.get_raw_additional_pts()
         have_max_a_plus = max_a_plus == 0
@@ -301,7 +318,7 @@ class Classroom:
                 self.grade_bins = orig_bins.copy()
                 self.grade_bins.increment_A_plus(a_plus_adjust)
             self.set_raw_additional_pts(i)
-            gbc = self.get_grade_bins_count()
+            gbc = self.get_grade_bins_count(with_hidden=with_hidden)
             a_plus = gbc.get("A+")
             a_plus = 0 if a_plus is None else a_plus
             ave_gpa = self.get_class_gpa_average(gbc)
@@ -312,6 +329,8 @@ class Classroom:
                     print(f"The A+ bin must be shifted up by {a_plus_adjust} points!")
                 self.set_raw_additional_pts(base_raw_points)
                 self.grade_bins = orig_bins
+                if a_plus_adjust > 0:
+                    return (i, a_plus_adjust)
                 return i
             
             if (not have_max_a_plus) and max_a_plus is not None and a_plus >= max_a_plus:
@@ -323,9 +342,13 @@ class Classroom:
         return False
         
 
-    def dump_student_results(self, filename: str, approx_grade=False, skip_non_roster=True) -> None:
+    def dump_student_results(self, filename: str, approx_grade=False, skip_non_roster=True, include_assignment_scores=False, with_hidden=True) -> None:
         """This function will dump the students in the class in a csv file."""
         csv_columns = ["name", "sid", "email", "grade", "score"]
+        if include_assignment_scores:
+            for cat in self.categories.values():
+                for assign in cat.assignments:
+                    csv_columns.append(f"{cat.name}/{assign.id}")
         with open(filename, "w+") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
             writer.writeheader()
