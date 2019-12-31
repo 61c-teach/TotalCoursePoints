@@ -6,13 +6,14 @@ import json
 from . import GradeBins
 
 class Student:
-    def __init__(self, name: str, sid: str, email: str, active_student: bool=True, extensionData: dict={}, secret: str=None):
+    def __init__(self, name: str, sid: str, email: str, active_student: bool=True, grade_status: str="GRD", extensionData: dict={}, secret: str=None):
         self.name = name
         self.sid = str(sid)
         self.email = email
         self.active_student = active_student
         self.categoryData = {}
         self.extensionData = extensionData
+        self.grade_status = grade_status
         # FIXME Parse extension data!
         if not extensionData:
             self.extensionData = {}
@@ -25,6 +26,9 @@ class Student:
                 print(exc)
                 self.extensionData = {}
         self.secret = secret
+    
+    def is_for_grade(self):
+        return self.grade_status == "GRD"
     
     def __repr__(self):
         return self.__str__()
@@ -156,7 +160,8 @@ class Student:
             "sid": self.sid,
             "email": self.email,
             "grade": self.get_approx_grade_id(c, score=score, with_hidden=with_hidden) if approx_grade else self.get_grade(c, with_hidden=with_hidden),
-            "score": score
+            "score": score,
+            "Grading Basis": self.grade_status
         }
         for cat in self.categoryData.values():
             for assign in cat.assignments_data:

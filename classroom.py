@@ -19,6 +19,7 @@ SID_MARKER = "SID"
 SECRET_MARKER = "Secret"
 EXTENSIONS_MARKER = "Extensions"
 ACTIVESTUDENT_MARKER = "InCanvas"
+GRADE_STATUS_MARKER = "ForGrade"
 
 class Classroom:
     def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles"), raw_additional_pts: float=0):
@@ -158,8 +159,12 @@ class Classroom:
                     print("Row does not have a SID! {}".format(row))
                     continue
                 active_student = str(row.get(ACTIVESTUDENT_MARKER))
-                if sid is None:
+                if active_student is None:
                     print("Row does not have active student {}".format(row))
+                    continue
+                grade_status = str(row.get(GRADE_STATUS_MARKER))
+                if grade_status is None:
+                    print("Row does not have for grade status {}".format(row))
                     continue
                 secret = row.get(SECRET_MARKER)
                 extension = row.get(EXTENSIONS_MARKER)
@@ -170,7 +175,7 @@ class Classroom:
                         print(exc)
                         print("Could not load extensions for student {} with sid {}! Here is the extension data: {}".format(name, sid, extension))
                         extension = None
-                s = Student(name, sid, email, active_student=active_student == "True", extensionData=extension, secret=secret)
+                s = Student(name, sid, email, active_student=active_student == "True", extensionData=extension, secret=secret, grade_status=grade_status)
                 self.add_student(s)
 
     def get_total_possible(self, with_hidden=False, only_inputted=False) -> int:
@@ -251,11 +256,11 @@ class Classroom:
                 return False
         return True
 
-    def get_grade_bins_count(self, with_hidden=False):
+    def get_grade_bins_count(self, with_hidden=False, inlcude_pnp=False):
         grade_bin_counts = {}
         all_in = self.all_inputted()
         for student in self.students:
-            if student.active_student:
+            if student.active_student and (inlcude_pnp or student.is_for_grade()):
                 if all_in:
                     gb = student.get_grade(self, with_hidden=with_hidden)
                 else:
@@ -335,7 +340,7 @@ class Classroom:
 
     def dump_student_results(self, filename: str, approx_grade=False, skip_non_roster=True, include_assignment_scores=False, with_hidden=True) -> None:
         """This function will dump the students in the class in a csv file."""
-        csv_columns = ["name", "sid", "email", "grade", "score"]
+        csv_columns = ["name", "sid", "email", "grade", "score", "Grading Basis"]
         if include_assignment_scores:
             for cat in self.categories.values():
                 for assign in cat.assignments:
@@ -360,3 +365,6 @@ class Classroom:
             
             sys.stdout.write("\033[F\033[K")
             print("Finished dumping classroom data!")
+
+    def gen_calcentral_report(self, filename:str):
+        pass
