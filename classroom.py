@@ -11,6 +11,7 @@ import datetime
 import pytz
 from collections import OrderedDict
 import sys
+import numpy as np
 
 NAME_MARKER = "Name"
 EMAIL_MARKER = "Email"
@@ -280,7 +281,19 @@ class Classroom:
     def print_class_statistics(self, with_hidden=False):
         print(self.get_class_statistics_str(with_hidden=with_hidden))
 
-    
+    def get_class_points_stats_str(self, with_hidden=False, skip_non_roster=True):
+        all_points = []
+        for student in self.students:
+            if skip_non_roster and not student.active_student:
+                continue
+            all_points.append(student.get_total_points_with_class(self, with_hidden=with_hidden))
+        mean = np.mean(all_points)
+        median = np.median(all_points)
+        std = np.std(all_points)
+        pmax = np.max(all_points)
+        pmin = np.min(all_points)
+        return f"mean: {mean}\nmedian: {median}\nstd dev: {std}\nmax: {pmax}\nmin: {pmin}"
+
     def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True, with_hidden=False):
         orig_bins = self.grade_bins
         base_raw_points = self.get_raw_additional_pts()

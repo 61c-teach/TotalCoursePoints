@@ -122,15 +122,21 @@ class Student:
         with open(results_file, "w") as f:
             f.write(jsondata)
 
-    def dump_str(self, c, class_dist: bool=False, include_rank=False):
+    def dump_str(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False):
         tests = []
         results = {
             "score":self.get_total_points_with_class(c),
             "tests":tests
         }
         tests.append({"name":"Total", "output": self.main_results_str(c, include_rank=include_rank)})
-        if class_dist:
-            tests.append({"name": "Class Stats", "output": c.get_class_statistics_str()})
+        if class_dist or class_stats:
+            stats_str = ""
+            if class_stats:
+                stats_str += c.get_class_points_stats_str()
+                stats_str += "\n"
+            if class_dist:
+                stats_str += c.get_class_statistics_str()
+            tests.append({"name": "Class Stats", "output": stats_str})
         for cat in self.categoryData.values():
             if not cat.is_hidden():
                 tests.append({
