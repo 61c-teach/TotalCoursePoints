@@ -4,7 +4,7 @@ This is the classroom and its info.
 from .assignment import Category
 from .grade_bins import GradeBins
 from .student import Student
-from .utils import GSheetExtensions, Time, bar_plot_str
+from .utils import GSheetExtensions, Time, bar_plot_str, get_class_gpa_average, get_class_statistics_str
 import csv
 import json
 import datetime
@@ -250,54 +250,14 @@ class Classroom:
     def get_class_gpa_average(self, grade_bins_count=None, with_hidden=False):
         if grade_bins_count is None:
             grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden)
-        total_count = 0
-        total_pts = 0
-        for gbin in self.grade_bins.get_bins():
-            gbid = gbin.id
-            if gbid in grade_bins_count:
-                count = grade_bins_count[gbid]
-                total_count += count
-                total_pts += gbin.get_gpa_value() * count
-        if total_count == 0:
-            return 0
-        return total_pts / total_count
+        return get_class_gpa_average(grade_bins_count, self.grade_bins)
 
     def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False):
         """This will print things like how many students, how many of each grade, etc...."""
         normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
         if grade_bin_counts is None:
             grade_bin_counts = self.get_grade_bins_count(with_hidden=with_hidden)
-        ave_gpa = self.get_class_gpa_average(grade_bin_counts)
-        ordered_grades = OrderedDict()
-        for ngb in normal_grade_bins:
-            if ngb in grade_bin_counts:
-                ordered_grades[ngb] = grade_bin_counts[ngb]
-            else:
-                ordered_grades[ngb] = 0
-        for gb, val in grade_bin_counts.items():
-            if gb in normal_grade_bins:
-                continue
-            ordered_grades[gb] = val
-        gbc_str = ""
-        if graph:
-            gbc_str = bar_plot_str(ordered_grades, add_percents=True)
-        else:
-            for gb in normal_grade_bins:
-                if gb in grade_bin_counts:
-                    count = grade_bin_counts[gb]
-                    gbc_str += f"{gb}: {count}\n"
-                    del grade_bin_counts[gb]
-            extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
-            if extra != "":
-                gbc_str += f"\n{extra}"
-        total = sum(ordered_grades.values())
-        As = round((ordered_grades["A+"] + ordered_grades["A"] + ordered_grades["A-"]) / total * 100, 1)
-        Bs = round((ordered_grades["B+"] + ordered_grades["B"] + ordered_grades["B-"]) / total * 100, 1)
-        Cs = round((ordered_grades["C+"] + ordered_grades["C"] + ordered_grades["C-"]) / total * 100, 1)
-        Ds = round((ordered_grades["D+"] + ordered_grades["D"] + ordered_grades["D-"]) / total * 100, 1)
-        Fs = round((ordered_grades["F"]) / total * 100, 1)
-        ratio_str = f"A: {As}%\nB: {Bs}%\nC: {Cs}%\nD: {Ds}%\nF: {Fs}%\n"
-        return f"Number of students per grade bin:\n{gbc_str}\nGrades Ratios:\n{ratio_str}\nClass average: {ave_gpa}\n"
+        return get_class_statistics_str(grade_bin_counts, self.grade_bins)
 
     def print_class_statistics(self, with_hidden=False):
         print(self.get_class_statistics_str(with_hidden=with_hidden))

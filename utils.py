@@ -4,6 +4,7 @@ from time import sleep
 import json
 from oauth2client.service_account import ServiceAccountCredentials
 import math
+from collections import OrderedDict
 
 # we want to wait 10 seconds before we try to do the request.
 gspread_timeout = 10
@@ -313,3 +314,53 @@ def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8, a
             ratio = (" " * (4 - len(ratio))) + ratio
         ret_str += f"{label.ljust(longest_label_length)} ▏ ({ratio}%) {count:#4d} {bar}\n"
     return ret_str
+
+def get_class_gpa_average(grade_bins_count, grade_bins):
+    total_count = 0
+    total_pts = 0
+    for gbin in grade_bins.get_bins():
+        gbid = gbin.id
+        if gbid in grade_bins_count:
+            count = grade_bins_count[gbid]
+            total_count += count
+            total_pts += gbin.get_gpa_value() * count
+    if total_count == 0:
+        return 0
+    return total_pts / total_count
+
+def get_class_statistics_str(grade_bin_counts, grade_bins, graph=True):
+    """This will print things like how many students, how many of each grade, etc...."""
+    # normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
+    normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"]
+    ave_gpa = get_class_gpa_average(grade_bin_counts, grade_bins)
+    ordered_grades = OrderedDict()
+    for ngb in normal_grade_bins:
+        if ngb in grade_bin_counts:
+            ordered_grades[ngb] = grade_bin_counts[ngb]
+        else:
+            ordered_grades[ngb] = 0
+    for gb, val in grade_bin_counts.items():
+        if gb in normal_grade_bins:
+            continue
+        ordered_grades[gb] = val
+    gbc_str = ""
+    if graph:
+        gbc_str = bar_plot_str(ordered_grades, add_percents=True)
+    else:
+        for gb in normal_grade_bins:
+            if gb in grade_bin_counts:
+                count = grade_bin_counts[gb]
+                gbc_str += f"{gb}: {count}\n"
+                del grade_bin_counts[gb]
+        extra = "\n".join([f"{gb}: {count}" for gb, count in grade_bin_counts.items()])
+        if extra != "":
+            gbc_str += f"\n{extra}"
+    total = sum(ordered_grades.values())
+    As = round((ordered_grades["A+"] + ordered_grades["A"] + ordered_grades["A-"]) / total * 100, 1)
+    Bs = round((ordered_grades["B+"] + ordered_grades["B"] + ordered_grades["B-"]) / total * 100, 1)
+    Cs = round((ordered_grades["C+"] + ordered_grades["C"] + ordered_grades["C-"]) / total * 100, 1)
+    # Ds = round((ordered_grades["D+"] + ordered_grades["D"] + ordered_grades["D-"]) / total * 100, 1)
+    Ds = round((ordered_grades["D"]) / total * 100, 1)
+    Fs = round((ordered_grades["F"]) / total * 100, 1)
+    ratio_str = f"A: {As}%\nB: {Bs}%\nC: {Cs}%\nD: {Ds}%\nF: {Fs}%\n"
+    return f"Number of students per grade bin:\n{gbc_str}\nGrades Ratios:\n{ratio_str}\nClass average: {ave_gpa}\n"
