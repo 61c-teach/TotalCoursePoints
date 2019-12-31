@@ -106,25 +106,29 @@ class Student:
         for cat in self.categoryData.values():
             cat.apply_slip_days()
 
-    def main_results_str(self, c):
+    def main_results_str(self, c, include_rank=False):
         if c.all_inputted():
             grade_info = self.get_grade(c)
         else:
             grade_info = self.get_approx_grade(c)
-        return "{}{}SID: {}\nemail: {}\n\nTotal Points: {} / {}\nGrade: {}".format(c.get_welcome(), c.get_comment(), self.sid, self.email, self.get_total_points_with_class(c), c.get_total_possible(), grade_info)
+        rank_str = ""
+        if include_rank:
+            rank, total = c.get_student_ranking(self)
+            rank_str = f"Rank: {rank} / {total}\n"
+        return f"{c.get_welcome()}{c.get_comment()}SID: {self.sid}\nemail: {self.email}\n\nTotal Points: {self.get_total_points_with_class(c)} / {c.get_total_possible()}\n{rank_str}Grade: {grade_info}"
 
     def dump_data(self, results_file: str, data: dict) -> None:
         jsondata = json.dumps(data, ensure_ascii=False)
         with open(results_file, "w") as f:
             f.write(jsondata)
 
-    def dump_str(self, c, class_dist: bool=False):
+    def dump_str(self, c, class_dist: bool=False, include_rank=False):
         tests = []
         results = {
             "score":self.get_total_points_with_class(c),
             "tests":tests
         }
-        tests.append({"name":"Total", "output": self.main_results_str(c)})
+        tests.append({"name":"Total", "output": self.main_results_str(c, include_rank=include_rank)})
         if class_dist:
             tests.append({"name": "Class Stats", "output": c.get_class_statistics_str()})
         for cat in self.categoryData.values():
@@ -135,8 +139,8 @@ class Student:
                 })
         return results
 
-    def dump_result(self, c, class_dist: bool=False):
-        results = self.dump_str(c, class_dist=class_dist)
+    def dump_result(self, c, class_dist: bool=False, include_rank=False):
+        results = self.dump_str(c, class_dist=class_dist, include_rank=include_rank)
         self.dump_data("/autograder/results/results.json", results)
 
     def get_raw_data(self, c, approx_grade: bool=False, with_hidden=True):

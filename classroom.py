@@ -113,6 +113,24 @@ class Classroom:
 
     def get_category(self, c: str):
         return self.categories.get(c)
+    
+    def get_student_ranking(self, s: Student, only_active_students=True, with_hidden=False):
+        s_total_pts = s.get_total_points_with_class(self, with_hidden=with_hidden)
+        all_points = []
+        for student in self.students:
+            if only_active_students and not student.active_student:
+                continue
+            all_points.append(student.get_total_points_with_class(self, with_hidden=with_hidden))
+        all_points = sorted(all_points, reverse=True)
+        rank = 1
+        for s in all_points:
+            if s > s_total_pts:
+                rank += 1
+        return (rank, len(all_points))
+    
+    def get_student_ranking_str(self, s: Student, only_active_students=True, with_hidden=False):
+        rank, total_students = self.get_student_ranking(s, only_active_students=only_active_students, with_hidden=with_hidden)
+        return f"Student {s.name} ({s.sid}) is rank {rank} / {total_students}"
 
     def load_students_from_roster(self, f: str, only_load: str = None):
         """
