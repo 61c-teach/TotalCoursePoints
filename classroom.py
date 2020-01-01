@@ -20,6 +20,7 @@ SECRET_MARKER = "Secret"
 EXTENSIONS_MARKER = "Extensions"
 ACTIVESTUDENT_MARKER = "InCanvas"
 GRADE_STATUS_MARKER = "ForGrade"
+INCOMPLETE_MARKER = "Incomplete"
 
 class Classroom:
     def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles"), raw_additional_pts: float=0):
@@ -166,6 +167,11 @@ class Classroom:
                 if grade_status is None:
                     print("Row does not have for grade status {}".format(row))
                     continue
+                incomplete = row.get(INCOMPLETE_MARKER)
+                if grade_status is None:
+                    print("Row does not have for incomplete status {}".format(row))
+                    continue
+                incomplete = incomplete == "True"
                 secret = row.get(SECRET_MARKER)
                 extension = row.get(EXTENSIONS_MARKER)
                 if extension:
@@ -175,7 +181,7 @@ class Classroom:
                         print(exc)
                         print("Could not load extensions for student {} with sid {}! Here is the extension data: {}".format(name, sid, extension))
                         extension = None
-                s = Student(name, sid, email, active_student=active_student == "True", extensionData=extension, secret=secret, grade_status=grade_status)
+                s = Student(name, sid, email, active_student=active_student == "True", extensionData=extension, secret=secret, grade_status=grade_status, incomplete=incomplete)
                 self.add_student(s)
 
     def get_total_possible(self, with_hidden=False, only_inputted=False) -> int:
@@ -357,7 +363,7 @@ class Classroom:
                 print(base_str.format(counter, student.name))
                 if not student.active_student:
                     continue
-                sdata = student.get_raw_data(self, approx_grade=approx_grade)
+                sdata = student.get_raw_data(self, approx_grade=approx_grade, with_hidden=with_hidden)
                 d = {}
                 for idv in csv_columns:
                     d[idv] = sdata[idv]
@@ -366,5 +372,36 @@ class Classroom:
             sys.stdout.write("\033[F\033[K")
             print("Finished dumping classroom data!")
 
-    def gen_calcentral_report(self, filename:str):
-        pass
+    def gen_calcentral_report(self, dest_filename:str, calcentral_roster_filename:str):
+        csv_columns = ["SID", "Name", "Grade", "Grading Basis", "Comments"]
+        name_map = {}
+        with open(calcentral_roster_filename, "r+") as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                sid = row.get("SID")
+                name = row.get("Name")
+                name_map[sid] = name
+        with open(dest_filename, "w+") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+            for student in self.students:
+                if not student.active_student:
+                    continue
+                sdata = student.get_raw_data(self, approx_grade=False, with_hidden=True)
+                d = {}
+                d["SID"] = sdata["sid"]
+                name = name_map.get(d["SID"])
+                if name is None:
+                    name = sdata['name']
+                    print(f"Could not find student {name} ({d['SID']}) in the sid-name map. You will have to fix the SID and name!")
+                else:
+                    del name_map[d['SID']]
+                d["Name"] = name
+                d["Grade"] = sdata["grade"]
+                d["Grading Basis"] = sdata["Grading Basis"]
+                d["Comments"] = ""
+                writer.writerow(d)
+        print("-" * 20)
+        print("Not matched names:")
+        for sid, name in name_map.items():
+            print(f"{name} ({sid})")

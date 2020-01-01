@@ -6,13 +6,14 @@ import json
 from . import GradeBins
 
 class Student:
-    def __init__(self, name: str, sid: str, email: str, active_student: bool=True, grade_status: str="GRD", extensionData: dict={}, secret: str=None):
+    def __init__(self, name: str, sid: str, email: str, active_student: bool=True, grade_status: str="GRD", extensionData: dict={}, secret: str=None, incomplete: bool=False):
         self.name = name
         self.sid = str(sid)
         self.email = email
         self.active_student = active_student
         self.categoryData = {}
         self.extensionData = extensionData
+        self.incomplete = incomplete
         self.grade_status = grade_status
         # FIXME Parse extension data!
         if not extensionData:
@@ -28,7 +29,7 @@ class Student:
         self.secret = secret
     
     def is_for_grade(self):
-        return self.grade_status == "GRD"
+        return self.grade_status == "GRD" and not self.incomplete
     
     def __repr__(self):
         return self.__str__()
@@ -75,6 +76,8 @@ class Student:
         return self.total_points(c=c, with_hidden=with_hidden) + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / c.get_total_possible()))
 
     def get_grade(self, c, score=None, with_hidden=False) -> str:
+        if self.incomplete:
+            return "I"
         if score is None:
             score = self.get_total_points_with_class(c, with_hidden=with_hidden)
         grade_bins = c.grade_bins
@@ -82,6 +85,8 @@ class Student:
         return b.id
 
     def get_approx_grade_id(self, c, score=None, with_hidden=False) -> str:
+        if self.incomplete:
+            return "I"
         if score is None:
             score = self.get_total_points_with_class(c, with_hidden=with_hidden)
         cur_score = score
