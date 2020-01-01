@@ -372,7 +372,7 @@ class Classroom:
             sys.stdout.write("\033[F\033[K")
             print("Finished dumping classroom data!")
 
-    def gen_calcentral_report(self, dest_filename:str, calcentral_roster_filename:str):
+    def gen_calcentral_report(self, dest_filename:str, calcentral_roster_filename:str, comment_fn=lambda sid: ""):
         csv_columns = ["SID", "Name", "Grade", "Grading Basis", "Comments"]
         name_map = {}
         with open(calcentral_roster_filename, "r+") as csvfile:
@@ -399,7 +399,7 @@ class Classroom:
                 d["Name"] = name
                 d["Grade"] = sdata["grade"]
                 d["Grading Basis"] = sdata["Grading Basis"]
-                d["Comments"] = ""
+                d["Comments"] = f"{round(sdata['score'], 2)}" + comment_fn(d["SID"])
                 writer.writerow(d)
         print("-" * 20)
         print("Not matched names:")
