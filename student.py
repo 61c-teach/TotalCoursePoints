@@ -153,6 +153,11 @@ class Student:
             "score":self.get_total_points_with_class(c),
             "tests":tests
         }
+        if c.gs_leaderboard:
+            results["leaderboard"] = {
+                "name": "Total Score",
+                "value": results["score"]
+            }
         tests.append({"name":"Total", "output": self.main_results_str(c, include_rank=include_rank)})
         if class_dist or class_stats:
             stats_str = ""

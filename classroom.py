@@ -23,7 +23,7 @@ GRADE_STATUS_MARKER = "ForGrade"
 INCOMPLETE_MARKER = "Incomplete"
 
 class Classroom:
-    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles"), raw_additional_pts: float=0):
+    def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles"), raw_additional_pts: float=0, gs_leaderboard: bool=False):
         self.grade_bins = grade_bins
         self.categories = categories
         self.students = students
@@ -32,6 +32,7 @@ class Classroom:
         self.gsheets_grades = gsheets_grades
         self.timezone = timezone
         self.raw_additional_pts = raw_additional_pts
+        self.gs_leaderboard = gs_leaderboard
         self.set_time_now()
         self.reset_comment()
         self.reset_welcome()
