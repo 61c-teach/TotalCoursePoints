@@ -284,8 +284,12 @@ class GracePeriod:
 def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8, add_percents=False) -> str:
     max_value = max(count for count in data.values())
     increment = max_value / number_of_bins
+    if increment == 0:
+        increment = 1
 
     total = sum(data.values())
+    if total == 0:
+        total = 1
 
     longest_label_length = max(len(label) for label in data.keys())
 
@@ -356,6 +360,8 @@ def get_class_statistics_str(grade_bin_counts, grade_bins, graph=True):
         if extra != "":
             gbc_str += f"\n{extra}"
     total = sum(ordered_grades.values())
+    if total == 0:
+        total = 1
     As = round((ordered_grades["A+"] + ordered_grades["A"] + ordered_grades["A-"]) / total * 100, 1)
     Bs = round((ordered_grades["B+"] + ordered_grades["B"] + ordered_grades["B-"]) / total * 100, 1)
     Cs = round((ordered_grades["C+"] + ordered_grades["C"] + ordered_grades["C-"]) / total * 100, 1)
