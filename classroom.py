@@ -356,7 +356,7 @@ class Classroom:
                 for assign in cat.assignments:
                     csv_columns.append(f"{cat.name}/{assign.id}")
             if self.get_raw_additional_pts() != 0:
-                csv_columns.append("Raw Additiona Pts")
+                csv_columns.append("Raw Additional Pts")
 
         with open(filename, "w+") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
@@ -375,7 +375,7 @@ class Classroom:
                 if include_assignment_scores:
                     add_pts = self.get_raw_additional_pts()
                     if add_pts != 0:
-                        d["Raw Additiona Pts"] = add_pts
+                        d["Raw Additional Pts"] = add_pts
                 for idv in csv_columns:
                     d[idv] = sdata[idv]
                 writer.writerow(d)

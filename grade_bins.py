@@ -91,6 +91,8 @@ class GradeBins:
             self.pass_threshold = Max()
         
         self.pass_threshold_map = {}
+        if pass_threshold_map is None:
+            pass_threshold_map = {}
 
         for identifier, value in pass_threshold_map.items():
             if isinstance(value, Bin):
