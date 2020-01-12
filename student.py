@@ -176,7 +176,7 @@ class Student:
         return results
 
     def dump_result(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False):
-        results = self.dump_str(c, class_dist=class_dist, include_rank=include_rank)
+        results = self.dump_str(c, class_dist=class_dist, class_stats=class_stats, include_rank=include_rank)
         self.dump_data("/autograder/results/results.json", results)
 
     def get_raw_data(self, c, approx_grade: bool=False, with_hidden=True):
