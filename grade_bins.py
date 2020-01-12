@@ -150,14 +150,19 @@ class GradeBins:
     def relative_bin(self, score:float, max_score:float) -> bin:
         if self.normal_max_points is None:
             raise GradeBinsError("There is no max score set!")
+        if max_score == 0:
+            max_score = 1
+        ratio = score / max_score
         for b in self.bins.values():
-            if b.in_relative_bin(score / max_score, self.normal_max_points):
+            if b.in_relative_bin(ratio, self.normal_max_points):
                 return b
         return None
 
     def relative_score(self, score: float, max_score: float) -> float:
         if self.normal_max_points is None:
             raise GradeBinsError("There is no max score set!")
+        if max_score == 0:
+            max_score = 1
         return (score / max_score) * self.normal_max_points
 
     def increment_A_plus(self, amt: float=1) -> bool:
