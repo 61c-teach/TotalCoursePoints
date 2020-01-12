@@ -210,6 +210,8 @@ class Classroom:
         self.apply_extensions(with_gsheet_extensions=with_gsheet_extensions)
         print("Applying slip time...")
         self.apply_slip_time()
+        print("Dropping lowest assignments...")
+        self.drop_lowest_assignments()
         print("Done Processing Classroom Data!")
 
     def load_assignment_data(self):
@@ -256,6 +258,10 @@ class Classroom:
     def apply_slip_time(self):
         for student in self.students:
             student.apply_slip_time()
+
+    def drop_lowest_assignments(self):
+        for student in self.students:
+            student.drop_lowest_assignments()
 
     def all_inputted(self, with_hidden=False) -> bool:
         for c in self.categories.values():

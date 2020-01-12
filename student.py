@@ -144,6 +144,10 @@ class Student:
         for cat in self.categoryData.values():
             cat.apply_slip_time()
 
+    def drop_lowest_assignments(self):
+        for cat in self.categoryData.values():
+            cat.drop_lowest_assignments()
+
     def main_results_str(self, c, include_rank=False):
         if c.all_inputted():
             grade_info = self.get_grade(c)

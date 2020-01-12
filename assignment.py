@@ -230,7 +230,7 @@ class Assignment:
             return self.course_points
         else:
             if self.percentage is True:
-                return self.category.course_points / sum([1 for a in self.category.assignments if a.percentage is True])
+                return self.category.course_points / (sum([1 for a in self.category.assignments if a.percentage is True]) - self.category.drop_lowest_n_assignments)
             return self.category.course_points * self.percentage
 
     def get_rank(self, score: float, use_all_scores: bool=False) -> tuple:
@@ -285,7 +285,8 @@ class StudentAssignmentData:
             slip_time_used: int=0, 
             extension_time: Time=Time(),
             data_loaded: bool=True,
-            data_found: bool=True
+            data_found: bool=True,
+            dropped: bool=False,
         ):
         if time_late is None:
             time_late = Time()
@@ -301,6 +302,7 @@ class StudentAssignmentData:
         self.data_loaded = data_loaded
         self.data_found = data_found
         self.get_total_possible = assignment.get_total_possible
+        self.dropped = dropped
         self.reset_comment()
 
     def append_comment(self, *args, sep=' ', end='\n'):
@@ -324,8 +326,14 @@ class StudentAssignmentData:
     def get_num_late(self):
         late_time = self.get_late_time()
         return late_time.get_count(self.assignment.late_interval)
+    
+    def drop_assignment(self):
+        self.dropped = True
+        self.append_comment("This assignment has been dropped.")
 
     def get_course_points(self, with_additional_points: bool=True, convert_to_course_points=True):
+        if self.dropped:
+            return 0
         num_late_time = self.get_num_late()
         if self.assignment.blanket_late_penalty and num_late_time > 0:
             num_late_time = 1

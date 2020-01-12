@@ -19,6 +19,7 @@ class Category:
         grace_period: GracePeriod=None,
         hidden: bool=False,
         extra_credit: bool=False,
+        drop_lowest_n_assignments: int=0,
     ):
         init_str = f"Initializing category {name}..."
         init_str_done = init_str + "Done!"
@@ -43,6 +44,7 @@ class Category:
         self.grace_period = grace_period
         self.hidden = hidden
         self.extra_credit = extra_credit
+        self.drop_lowest_n_assignments = drop_lowest_n_assignments
         print(init_str_done)
 
     def add_assignments(self, assignments: list):
@@ -72,16 +74,32 @@ class Category:
         if self.course_points is not None:
             points = self.course_points
             if only_inputted:
-                points = 0
+                points = []
                 for a in self.assignments:
                     if a.is_inputted(with_hidden=with_hidden) and not a.extra_credit:
-                        points += a.get_total_possible()
+                        points.append(a.get_total_possible())
+                tot_a = len(self.assignments)
+                cur_in = len(points)
+                actual_amt = tot_a - self.drop_lowest_n_assignments
+                if cur_in > actual_amt:
+                    drop_n = cur_in - actual_amt
+                    for i in range(drop_n):
+                        points.remove(min(points))
+                points = sum(points)
             return points
-        points = 0
+        points = []
         for a in self.assignments:
             if (a.hidden and not with_hidden) or (not a.is_inputted() and only_inputted):
                 continue
-            points += a.get_total_possible()
+            points.append(a.get_total_possible())
+        tot_a = len(self.assignments)
+        cur_in = len(points)
+        actual_amt = tot_a - self.drop_lowest_n_assignments
+        if cur_in > actual_amt:
+            drop_n = cur_in - actual_amt
+            for i in range(drop_n):
+                points.remove(min(points))
+        points = sum(points)
         return points
             
     def all_inputted(self, with_hidden=False):
@@ -198,6 +216,15 @@ class StudentCategoryData:
                         slip_time_left -= assignment_data.slip_time_used
                     break
         self.validate_slip_days()
+
+    def drop_lowest_assignments(self):
+        if self.category.drop_lowest_n_assignments >= len(self.assignments_data):
+            raise ValueError("You cannot drop more assignments than what exists!")
+        assignments = [(a, a.get_course_points()) for a in self.assignments_data]
+        for i in range(self.category.drop_lowest_n_assignments):
+            lowest = min(assignments, key=lambda x: x[1])
+            lowest[0].drop_assignment()
+            assignments.remove(lowest)
 
     def is_hidden(self):
         return self.category.hidden
