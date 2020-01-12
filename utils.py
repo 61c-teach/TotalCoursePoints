@@ -36,7 +36,10 @@ def safe_gspread_call(fn, args=[], kwargs={}, sleep_timeout=gspread_timeout, att
     print("Failed to grab resource!")
 
 class GSheetBase:
-    def __init__(self, sheet_key, credentials='credentials.json'):
+    default_credentials = 'credentials.json'
+    def __init__(self, sheet_key, credentials=None):
+        if credentials is None:
+            credentials = self.default_credentials
         scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
         creds = ServiceAccountCredentials.from_json_keyfile_name(credentials, scope)
         self.client = gspread.authorize(creds)

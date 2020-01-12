@@ -198,9 +198,9 @@ class Student:
                 })
         return results
 
-    def dump_result(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False):
+    def dump_result(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False, results_file:str="/autograder/results/results.json"):
         results = self.dump_str(c, class_dist=class_dist, class_stats=class_stats, include_rank=include_rank)
-        self.dump_data("/autograder/results/results.json", results)
+        self.dump_data(results_file, results)
 
     def get_raw_data(self, c, approx_grade: bool=False, with_hidden=True):
         score = self.get_total_points_with_class(c, with_hidden=with_hidden)
