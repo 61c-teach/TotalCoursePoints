@@ -316,7 +316,8 @@ def bar_plot_str(data: {str:float}, number_of_bins: int=25, chunk_size: int=8, a
         ratio = str(round(count / total * 100, 1))
         if len(ratio) <= 4:
             ratio = (" " * (4 - len(ratio))) + ratio
-        ret_str += f"{label.ljust(longest_label_length)} ▏ ({ratio}%) {count:#4d} {bar}\n"
+        count_str = (" " * (len(str(max_value)) - len(str(count)))) + str(count)
+        ret_str += f"{label.ljust(longest_label_length)} ▏ ({ratio}%) {count_str} {bar}\n"
     return ret_str
 
 def get_class_gpa_average(grade_bins_count, grade_bins):
