@@ -350,10 +350,14 @@ class Classroom:
     def dump_student_results(self, filename: str, approx_grade=False, skip_non_roster=True, include_assignment_scores=False, with_hidden=True) -> None:
         """This function will dump the students in the class in a csv file."""
         csv_columns = ["name", "sid", "email", "grade", "score", "Grading Basis"]
+
         if include_assignment_scores:
             for cat in self.categories.values():
                 for assign in cat.assignments:
                     csv_columns.append(f"{cat.name}/{assign.id}")
+            if self.get_raw_additional_pts() != 0:
+                csv_columns.append("Raw Additiona Pts")
+
         with open(filename, "w+") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
             writer.writeheader()
@@ -368,6 +372,10 @@ class Classroom:
                     continue
                 sdata = student.get_raw_data(self, approx_grade=approx_grade, with_hidden=with_hidden)
                 d = {}
+                if include_assignment_scores:
+                    add_pts = self.get_raw_additional_pts()
+                    if add_pts != 0:
+                        d["Raw Additiona Pts"] = add_pts
                 for idv in csv_columns:
                     d[idv] = sdata[idv]
                 writer.writerow(d)
