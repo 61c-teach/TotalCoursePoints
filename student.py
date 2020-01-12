@@ -83,7 +83,10 @@ class Student:
         return self.categoryData.get(category.name)
 
     def get_total_points_with_class(self, c, with_hidden=False) -> float:
-        return self.total_points(c=c, with_hidden=with_hidden) + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / c.get_total_possible()))
+        tp = c.get_total_possible()
+        if tp == 0:
+            tp = 1
+        return self.total_points(c=c, with_hidden=with_hidden) + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / tp))
 
     def get_grade(self, c, score=None, with_hidden=False) -> str:
         if self.incomplete:
