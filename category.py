@@ -135,7 +135,11 @@ class StudentCategoryData:
         self.personal_comment = ""
     
     def get_comment(self):
-        return self.personal_comment
+        c = self.personal_comment
+        dla = self.category.drop_lowest_n_assignments
+        if dla > 0:
+            c = f"This category will drop your lowest {str(dla) + ' ' if dla != 1 else ''}assignment{'s' if dla != 1 else ''}.\n" + c
+        return c
 
     def __repr__(self):
         return self.__str__()
