@@ -175,7 +175,7 @@ class Student:
                 })
         return results
 
-    def dump_result(self, c, class_dist: bool=False, include_rank=False):
+    def dump_result(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False):
         results = self.dump_str(c, class_dist=class_dist, include_rank=include_rank)
         self.dump_data("/autograder/results/results.json", results)
 
