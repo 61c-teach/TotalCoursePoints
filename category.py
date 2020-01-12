@@ -220,7 +220,7 @@ class StudentCategoryData:
     def drop_lowest_assignments(self):
         if self.category.drop_lowest_n_assignments >= len(self.assignments_data):
             raise ValueError("You cannot drop more assignments than what exists!")
-        assignments = [(a, a.get_course_points()) for a in self.assignments_data]
+        assignments = [(a, a.get_course_points()) for a in self.assignments_data if a.is_worth_points()]
         for i in range(self.category.drop_lowest_n_assignments):
             lowest = min(assignments, key=lambda x: x[1])
             lowest[0].drop_assignment()

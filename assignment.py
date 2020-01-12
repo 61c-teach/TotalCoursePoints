@@ -345,11 +345,14 @@ class StudentAssignmentData:
 
     def is_inputted(self, with_hidden=False):
         return self.assignment.is_inputted(with_hidden=with_hidden)
+
+    def is_worth_points(self):
+        return not (self.assignment.get_total_possible() == 0 and not self.assignment.extra_credit)
     
     def get_str(self):
         s = "{}[{}] {}\n{}{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment, self.get_comment())
         entered = False
-        if self.assignment.get_total_possible() == 0 and not self.assignment.extra_credit:
+        if not self.is_worth_points():
             s += "This assignment is not worth any course points!\n"
             score = None
             course_points = None
