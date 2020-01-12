@@ -299,6 +299,8 @@ class Classroom:
             if skip_non_roster and not student.active_student:
                 continue
             all_points.append(student.get_total_points_with_class(self, with_hidden=with_hidden))
+        if len(all_points) == 0:
+            all_points.append(0)
         mean = np.mean(all_points)
         median = np.median(all_points)
         std = np.std(all_points)
