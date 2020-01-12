@@ -85,9 +85,7 @@ class GradeBins:
         
         if isinstance(pass_threshold, Bin):
             self.pass_threshold = pass_threshold.min
-        elif isinstance(pass_threshold, float):
-            self.pass_threshold = pass_threshold
-        elif isinstance(pass_threshold, int):
+        elif isinstance(pass_threshold, (int, float)):
             self.pass_threshold = pass_threshold
         else:
             self.pass_threshold = Max()
@@ -97,7 +95,7 @@ class GradeBins:
         for identifier, value in pass_threshold_map.items():
             if isinstance(value, Bin):
                 self.pass_threshold_map[identifier] = value.min
-            elif isinstance(value, [int, float]):
+            elif isinstance(value, (int, float)):
                 self.pass_threshold_map[identifier] = value
             else:
                 self.pass_threshold_map[identifier] = Max()
