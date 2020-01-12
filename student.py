@@ -3,7 +3,7 @@ This is a class which will contain info about the current student.
 """
 from __future__ import annotations
 import json
-from . import GradeBins
+from . import GradeBins, PNP
 
 class Student:
     def __init__(self, name: str, sid: str, email: str, active_student: bool=True, grade_status: str="GRD", extensionData: dict={}, secret: str=None, incomplete: bool=False):
@@ -80,8 +80,15 @@ class Student:
             return "I"
         if score is None:
             score = self.get_total_points_with_class(c, with_hidden=with_hidden)
-        grade_bins = c.grade_bins
-        b = grade_bins.in_bin(score)
+
+        if not self.is_for_grade() and self.grade_status in PNP.PNP_Types.keys():
+            pnp = PNP.PNP_Types[self.grade_status]
+            if c.grade_bins.is_passing(score, self.grade_status):
+                return pnp.pass_value
+            else:
+                return pnp.not_pass_value
+            
+        b = c.grade_bins.in_bin(score)
         return b.id
 
     def get_approx_grade_id(self, c, score=None, with_hidden=False) -> str:
@@ -91,6 +98,15 @@ class Student:
             score = self.get_total_points_with_class(c, with_hidden=with_hidden)
         cur_score = score
         cur_max_score = c.get_total_possible(only_inputted=True)
+        
+        if not self.is_for_grade() and self.grade_status in PNP.PNP_Types.keys():
+            pnp = PNP.PNP_Types[self.grade_status]
+            score = c.grade_bins.get_relative_score(cur_score, cur_max_score)
+            if c.grade_bins.is_passing(score, self.grade_status):
+                return pnp.pass_value
+            else:
+                return pnp.not_pass_value
+        
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
         return b.id
 

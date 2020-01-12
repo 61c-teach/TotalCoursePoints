@@ -71,7 +71,7 @@ class Bin:
         return self.in_bin(percentage * max_points)
 
 class GradeBins:
-    def __init__(self, bins: list = [], pass_threshold: Bin = None, normal_max_points: float = None):
+    def __init__(self, bins: list = [], pass_threshold: Bin = None, pass_threshold_map: Bin = None, normal_max_points: float = None):
         self.bins = {}
         mxpts = None
         for b in bins:
@@ -91,7 +91,17 @@ class GradeBins:
             self.pass_threshold = pass_threshold
         else:
             self.pass_threshold = Max()
-    
+        
+        self.pass_threshold_map = {}
+
+        for identifier, value in pass_threshold_map.items():
+            if isinstance(value, Bin):
+                self.pass_threshold_map[identifier] = value.min
+            elif isinstance(value, [int, float]):
+                self.pass_threshold_map[identifier] = value
+            else:
+                self.pass_threshold_map[identifier] = Max()
+            
     def copy(self):
         bins_copy = []
         for b in self.bins.values():
@@ -134,16 +144,23 @@ class GradeBins:
                 return b
         return None
 
-    def is_passing(self, value: float) -> bool:
+    def is_passing(self, value: float, grade_type: str=None) -> bool:
+        if grade_type is not None and grade_type in self.pass_threshold_map:
+            return value >= self.pass_threshold_map[grade_type]
         return value >= self.pass_threshold
 
-    def relative_bin(self, score:float, max_score:float) -> bool:
+    def relative_bin(self, score:float, max_score:float) -> bin:
         if self.normal_max_points is None:
             raise GradeBinsError("There is no max score set!")
         for b in self.bins.values():
             if b.in_relative_bin(score / max_score, self.normal_max_points):
                 return b
         return None
+
+    def relative_score(self, score: float, max_score: float) -> float:
+        if self.normal_max_points is None:
+            raise GradeBinsError("There is no max score set!")
+        return (score / max_score) * self.normal_max_points
 
     def increment_A_plus(self, amt: float=1) -> bool:
         if "A+" in self.bins and "A" in self.bins:
@@ -153,3 +170,15 @@ class GradeBins:
             A.max += amt
             return True
         return False
+
+class PNP:
+    PNP_Types = {}
+    def __init__(self, grade_type: str, pass_value: str, not_pass_value: str):
+        self.grade_type = grade_type
+        self.pass_value = pass_value
+        self.not_pass_value = not_pass_value
+        if grade_type in self.PNP_Types:
+            raise ValueError(f"{grade_type} already exists in the PNP mapping!")
+        self.PNP_Types[grade_type] = self
+PNP("EPN", "P", "NP")
+PNP("ESU", "S", "U")

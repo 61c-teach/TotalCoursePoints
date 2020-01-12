@@ -1,4 +1,4 @@
-from .grade_bins import Bin, GradeBins
+from .grade_bins import Bin, GradeBins, PNP
 from .classroom import Classroom
 from .student import Student
 from .category import Category, StudentCategoryData
