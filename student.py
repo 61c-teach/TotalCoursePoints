@@ -165,6 +165,8 @@ class Student:
                 stats_str += c.get_class_points_stats_str()
                 stats_str += "\n"
             if class_dist:
+                if class_stats:
+                    stats_str += ("_" * 35) + ("\n" * 2)
                 stats_str += c.get_class_statistics_str()
             tests.append({"name": "Class Stats", "output": stats_str})
         for cat in self.categoryData.values():
