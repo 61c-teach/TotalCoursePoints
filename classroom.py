@@ -371,11 +371,11 @@ class Classroom:
                 if not student.active_student:
                     continue
                 sdata = student.get_raw_data(self, approx_grade=approx_grade, with_hidden=with_hidden)
-                d = {}
                 if include_assignment_scores:
                     add_pts = self.get_raw_additional_pts()
                     if add_pts != 0:
-                        d["Raw Additional Pts"] = add_pts
+                        sdata["Raw Additional Pts"] = add_pts
+                d = {}
                 for idv in csv_columns:
                     d[idv] = sdata[idv]
                 writer.writerow(d)
