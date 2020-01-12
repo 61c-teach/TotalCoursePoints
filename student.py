@@ -27,6 +27,16 @@ class Student:
                 print(exc)
                 self.extensionData = {}
         self.secret = secret
+        self.reset_comment()
+
+    def append_comment(self, *args, sep=' ', end='\n'):
+        self.personal_comment += sep.join(args) + end
+
+    def reset_comment(self):
+        self.personal_comment = ""
+    
+    def get_comment(self):
+        return self.personal_comment
     
     def is_for_grade(self):
         return self.grade_status == "GRD" and not self.incomplete
@@ -140,7 +150,10 @@ class Student:
         if include_rank:
             rank, total = c.get_student_ranking(self)
             rank_str = f"Rank: {rank} / {total}\n"
-        return f"{c.get_welcome()}{c.get_comment()}SID: {self.sid}\nemail: {self.email}\n\nTotal Points: {self.get_total_points_with_class(c)} / {c.get_total_possible()}\n{rank_str}Grade: {grade_info}"
+        personal_comment = self.get_comment()
+        if len(personal_comment) > 0:
+            personal_comment = "\n\n" + personal_comment
+        return f"{c.get_welcome()}{c.get_comment()}SID: {self.sid}\nemail: {self.email}\n\nTotal Points: {self.get_total_points_with_class(c)} / {c.get_total_possible()}\n{rank_str}Grade: {grade_info}{personal_comment}"
 
     def dump_data(self, results_file: str, data: dict) -> None:
         jsondata = json.dumps(data, ensure_ascii=False)
