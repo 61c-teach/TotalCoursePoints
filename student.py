@@ -140,9 +140,9 @@ class Student:
                     continue
                 assign.extension_time = value
 
-    def apply_slip_days(self):
+    def apply_slip_time(self):
         for cat in self.categoryData.values():
-            cat.apply_slip_days()
+            cat.apply_slip_time()
 
     def main_results_str(self, c, include_rank=False):
         if c.all_inputted():

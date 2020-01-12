@@ -208,8 +208,8 @@ class Classroom:
         self.match_assignments_to_students()
         print("Applying extensions...")
         self.apply_extensions(with_gsheet_extensions=with_gsheet_extensions)
-        print("Applying slip days...")
-        self.apply_slip_days()
+        print("Applying slip time...")
+        self.apply_slip_time()
         print("Done Processing Classroom Data!")
 
     def load_assignment_data(self):
@@ -253,9 +253,9 @@ class Classroom:
             #     import ipdb; ipdb.set_trace()
             student.apply_extensions()
 
-    def apply_slip_days(self):
+    def apply_slip_time(self):
         for student in self.students:
-            student.apply_slip_days()
+            student.apply_slip_time()
 
     def all_inputted(self, with_hidden=False) -> bool:
         for c in self.categories.values():

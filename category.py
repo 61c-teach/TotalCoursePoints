@@ -1,5 +1,6 @@
 from __future__ import annotations
 from .utils import GracePeriod, Time
+import numpy as np
 
 class Category:
     def __init__(self,
@@ -125,7 +126,60 @@ class StudentCategoryData:
         return "Category: {}\nAssignments:\n{}".format(self.category.name, self.assignments_data)
 
     def apply_optimal_slip_time(self, ignore_score=False):
-        pass
+        max_slip_count = self.category.max_slip_count
+        if max_slip_count is None:
+            return
+        late_assignments = []
+        for assignment in self.category.assignments:
+            if isinstance(assignment.allowed_slip_count, int) and assignment.allowed_slip_count < 0:
+                continue
+            for assignment_data in self.assignments_data:
+                if assignment_data.assignment == assignment:
+                    if assignment_data.get_late_time().get_seconds() > 0 and (assignment_data.score > 0 or ignore_score):
+                        late_assignments.append((assignment_data, assignment_data.get_num_late()))
+                    break
+        if len(late_assignments) == 0:
+            return
+        min_sd_to_use = sum(map(lambda x: x[1], late_assignments))
+        possible_sd_per_assignment = []
+        for la in late_assignments:
+            possible_slip_day_usage = []
+            if la[0].assignment.allowed_slip_count is not None: 
+                la[1] = min(la[0].assignment.allowed_slip_count, la[1])
+            for i in range(la[1] + 1):
+                possible_slip_day_usage.append(i)
+            possible_sd_per_assignment.append(possible_slip_day_usage)
+        choices = np.array(np.meshgrid(*possible_sd_per_assignment)).T.reshape(-1,len(possible_sd_per_assignment))
+        combos = []
+        min_slip_count = min(min_sd_to_use, max_slip_count)
+        for c in choices:
+            if min_slip_count <= sum(c) <= max_slip_count:
+                combos.append(c)
+        def assign_slip_days(assignments, times):
+            for a, t in zip(assignments, times):
+                a.slip_time_used = t
+        aments = list(map(lambda x: x[0], late_assignments))
+        possible_scores = []
+        for combo in combos:
+            assign_slip_days(aments, combo)
+            possible_scores.append(self.get_total_score(with_hidden=True))
+        best_combo_index= np.argmax(possible_scores)
+        best_combo = combos[best_combo_index]
+        assign_slip_days(aments, best_combo)
+        # print(combos)
+        # print(possible_scores)
+        # print(best_combo)
+        self.validate_slip_days()
+    
+    def validate_slip_days(self):
+        mx = self.category.max_slip_count
+        if mx is None:
+            return
+        count = 0
+        for a in self.assignments_data:
+            count += a.slip_time_used
+            if count > mx:
+                raise ValueError("Somehow applied more slipdays than the max!")
 
     def apply_ordered_slip_time(self, ignore_score=False):
         slip_time_left = self.category.max_slip_count
@@ -142,7 +196,8 @@ class StudentCategoryData:
                         else:
                             assignment_data.slip_time_used = min(assignment_data.get_num_late(), slip_time_left)
                         slip_time_left -= assignment_data.slip_time_used
-                    continue
+                    break
+        self.validate_slip_days()
 
     def is_hidden(self):
         return self.category.hidden
@@ -175,7 +230,7 @@ class StudentCategoryData:
             total += a.get_course_points()
         return total
 
-    apply_slip_days = apply_ordered_slip_time
+    apply_slip_time = apply_ordered_slip_time
 
 
 from .assignment import Assignment, StudentAssignmentData
