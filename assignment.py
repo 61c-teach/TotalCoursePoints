@@ -389,7 +389,7 @@ class StudentAssignmentData:
         
         if score is not None or course_points is not None:
             s += "score: {} / {}\n".format(score, self.assignment.out_of)
-            if not self.assignemnt.does_not_contribulte:
+            if not self.assignment.does_not_contribulte:
                 s += "course points: {} / {}\n\n".format(course_points, self.get_total_possible())
         
         if entered:
