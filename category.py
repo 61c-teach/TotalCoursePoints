@@ -20,6 +20,7 @@ class Category:
         hidden: bool=False,
         extra_credit: bool=False,
         drop_lowest_n_assignments: int=0,
+        does_not_contribulte: bool=False,
     ):
         init_str = f"Initializing category {name}..."
         init_str_done = init_str + "Done!"
@@ -45,6 +46,7 @@ class Category:
         self.hidden = hidden
         self.extra_credit = extra_credit
         self.drop_lowest_n_assignments = drop_lowest_n_assignments
+        self.does_not_contribulte = does_not_contribulte
         print(init_str_done)
 
     def add_assignments(self, assignments: list):
@@ -250,10 +252,12 @@ class StudentCategoryData:
             s += assign.get_str()
         if self.category.max_slip_count:
             s += "\nSlip time left: {} out of {}\n".format(self.category.max_slip_count - slip_time_used, self.category.max_slip_count)
-        s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(), self.category.get_total_possible())
+        s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(ignore_not_for_points=True), self.category.get_total_possible())
         return s
     
-    def get_total_score(self, with_hidden=False):
+    def get_total_score(self, with_hidden=False, ignore_not_for_points=False):
+        if self.category.does_not_contribulte and not ignore_not_for_points:
+            return 0
         total = 0
         for a in self.assignments_data:
             if a.is_hidden() and not with_hidden:

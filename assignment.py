@@ -54,7 +54,7 @@ class Assignment:
         self.category = category
         self.course_points = course_points
         if data_file is None:
-            self.data_file = "files/{}/{}.csv".format(category.name, id)
+            self.data_file = "files/data/{}/{}.csv".format(category.name, id)
         else:
             self.data_file = data_file
         if data_sheet is None:
