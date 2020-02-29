@@ -314,7 +314,7 @@ class Classroom:
         pmin = np.min(all_points)
         quartile = ""
         if with_quartile:
-            quartile += "\n"
+            quartile += "\n\n"
             for p in range(10, 100, 10):
                 quartile += f"{p}th percentile: {np.percentile(all_points, p)}\n"
         return f"mean: {mean}\nmedian: {median}\nstd dev: {std}\nmax: {pmax}\nmin: {pmin}{quartile}"
