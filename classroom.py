@@ -299,7 +299,7 @@ class Classroom:
     def print_class_statistics(self, with_hidden=False):
         print(self.get_class_statistics_str(with_hidden=with_hidden))
 
-    def get_class_points_stats_str(self, with_hidden=False, skip_non_roster=True):
+    def get_class_points_stats_str(self, with_hidden=False, skip_non_roster=True, with_quartile=True):
         all_points = []
         for student in self.students:
             if skip_non_roster and not student.active_student:
@@ -312,7 +312,12 @@ class Classroom:
         std = np.std(all_points)
         pmax = np.max(all_points)
         pmin = np.min(all_points)
-        return f"mean: {mean}\nmedian: {median}\nstd dev: {std}\nmax: {pmax}\nmin: {pmin}"
+        quartile = ""
+        if with_quartile:
+            quartile += "\n"
+            for p in range(10, 100, 10):
+                quartile += f"{p}th percentile: {np.percentile(all_points, p)}\n"
+        return f"mean: {mean}\nmedian: {median}\nstd dev: {std}\nmax: {pmax}\nmin: {pmin}{quartile}"
 
     def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True, with_hidden=False):
         orig_bins = self.grade_bins
