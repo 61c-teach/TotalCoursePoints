@@ -182,7 +182,7 @@ class Student:
         if class_dist or class_stats:
             stats_str = ""
             if class_stats:
-                title = "Class Statistics:
+                title = "Class Statistics:"
                 stats_str += f"{title}\n" + ("-" * len(title))
                 stats_str += c.get_class_points_stats_str()
                 stats_str += "\n"
