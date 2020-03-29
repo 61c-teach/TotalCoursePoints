@@ -38,11 +38,19 @@ class Max:
 
 class Bin:
     """[min, max)"""
-    def __init__(self, id: str, gpa_value: float, min: float, max: float):
+    def __init__(self, id: str, gpa_value: float, min: float, max: float, uniform_adjust: float =  None):
         self.id = id
         self.gpa_value = gpa_value
         self.min = min
         self.max = max
+        self.uniform_adjust(uniform_adjust)
+        
+    def uniform_adjust(self, adjust: float):
+        if adjust is not None:
+            if self.min is not None:
+                self.min += adjust
+            if self.max is not None:
+                self.max += adjust 
 
     def __contains__(self, key: float):
         return self.in_bin(key)
@@ -71,22 +79,23 @@ class Bin:
         return self.in_bin(percentage * max_points)
 
 class GradeBins:
-    def __init__(self, bins: list = [], pass_threshold: Bin = None, pass_threshold_map: Bin = None, normal_max_points: float = None):
+    def __init__(self, bins: list = [], pass_threshold: Bin = None, pass_threshold_map: Bin = None, normal_max_points: float = None, uniform_adjust: float =  None):
         self.bins = {}
         mxpts = None
         for b in bins:
             if mxpts is None or b.max > mxpts:
                 mxpts = b.max
+            b.uniform_adjust(uniform_adjust)
             self.add_bin(b)
 
         if normal_max_points is not None:
             mxpts = normal_max_points
-        self.normal_max_points = mxpts
+        self.normal_max_points = mxpts + uniform_adjust
         
         if isinstance(pass_threshold, Bin):
             self.pass_threshold = pass_threshold.min
         elif isinstance(pass_threshold, (int, float)):
-            self.pass_threshold = pass_threshold
+            self.pass_threshold = pass_threshold + uniform_adjust
         else:
             self.pass_threshold = Max()
         
@@ -98,7 +107,7 @@ class GradeBins:
             if isinstance(value, Bin):
                 self.pass_threshold_map[identifier] = value.min
             elif isinstance(value, (int, float)):
-                self.pass_threshold_map[identifier] = value
+                self.pass_threshold_map[identifier] = value + uniform_adjust
             else:
                 self.pass_threshold_map[identifier] = Max()
             
