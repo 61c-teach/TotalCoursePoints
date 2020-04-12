@@ -160,7 +160,7 @@ class StudentCategoryData:
             for assignment_data in self.assignments_data:
                 if assignment_data.assignment == assignment:
                     if assignment_data.get_late_time().get_seconds() > 0 and (assignment_data.score > 0 or ignore_score):
-                        late_assignments.append((assignment_data, assignment_data.get_num_late()))
+                        late_assignments.append([assignment_data, assignment_data.get_num_late()])
                     break
         if len(late_assignments) == 0:
             return
