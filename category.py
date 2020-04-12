@@ -164,12 +164,13 @@ class StudentCategoryData:
                     break
         if len(late_assignments) == 0:
             return
-        min_sd_to_use = sum(map(lambda x: x[1], late_assignments))
+        min_sd_to_use = 0
         possible_sd_per_assignment = []
         for la in late_assignments:
             possible_slip_day_usage = []
             if la[0].assignment.allowed_slip_count is not None: 
                 la[1] = min(la[0].assignment.allowed_slip_count, la[1])
+            min_sd_to_use += la[1]
             for i in range(la[1] + 1):
                 possible_slip_day_usage.append(i)
             possible_sd_per_assignment.append(possible_slip_day_usage)
@@ -187,7 +188,7 @@ class StudentCategoryData:
         for combo in combos:
             assign_slip_days(aments, combo)
             possible_scores.append(self.get_total_score(with_hidden=True))
-        best_combo_index= np.argmax(possible_scores)
+        best_combo_index = np.argmax(possible_scores)
         best_combo = combos[best_combo_index]
         assign_slip_days(aments, best_combo)
         # print(combos)
