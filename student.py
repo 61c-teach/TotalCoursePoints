@@ -123,7 +123,7 @@ class Student:
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
         return b.id
 
-    def get_approx_grade(self, c) -> str:
+    def get_approx_grade(self, c, show_exact_grade: bool=True) -> str:
         cur_score = self.get_total_points_with_class(c)
         cur_max_score = c.get_total_possible(only_inputted=True)
         b = c.grade_bins.relative_bin(cur_score, cur_max_score)
@@ -149,10 +149,9 @@ class Student:
             cat.drop_lowest_assignments()
 
     def main_results_str(self, c, include_rank=False):
-        if c.all_inputted():
-            grade_info = self.get_grade(c)
-        else:
-            grade_info = self.get_approx_grade(c)
+        grade_info = self.get_grade(c)
+        if not c.all_inputted():
+            grade_info += "\n" + self.get_approx_grade(c)
         rank_str = ""
         if include_rank:
             rank, total = c.get_student_ranking(self)
