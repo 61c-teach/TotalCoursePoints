@@ -83,7 +83,7 @@ class Category:
                 tot_a = len(self.assignments)
                 cur_in = len(points)
                 actual_amt = tot_a - self.drop_lowest_n_assignments
-                points = [i for i in points if i == 0]
+                points = [i for i in points if i != 0]
                 if cur_in > actual_amt:
                     drop_n = cur_in - actual_amt
                     for i in range(min(drop_n, len(points))):
@@ -98,7 +98,7 @@ class Category:
         tot_a = len(self.assignments)
         cur_in = len(points)
         actual_amt = tot_a - self.drop_lowest_n_assignments
-        points = [i for i in points if i == 0]
+        points = [i for i in points if i != 0]
         if cur_in > actual_amt:
             drop_n = cur_in - actual_amt
             for i in range(drop_n):
