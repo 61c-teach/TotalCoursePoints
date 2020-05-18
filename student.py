@@ -74,10 +74,11 @@ class Student:
         cat = self.categoryData.get(assignment.category.name)
         if cat is None:
             return None
-        for a in cat:
-            if a.assignment == assignment:
-                return a
-        return None
+        return cat.get_assignment_data(assignment)
+        # for a in cat:
+        #     if a.assignment == assignment:
+        #         return a
+        # return None
 
     def get_category_data(self, category: Category) -> Category:
         return self.categoryData.get(category.name)
