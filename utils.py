@@ -37,7 +37,7 @@ def safe_gspread_call(fn, args=[], kwargs={}, sleep_timeout=gspread_timeout, att
 
 class GSheetBase:
     default_credentials = 'credentials.json'
-    def __init__(self, sheet_key, credentials=None):
+    def __init__(self, sheet_key, credentials=None, prefetch=True):
         if credentials is None:
             credentials = self.default_credentials
         scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
@@ -45,8 +45,38 @@ class GSheetBase:
         self.client = gspread.authorize(creds)
         self.sheets = self.client.open_by_key(sheet_key)
         self.sheet_key = sheet_key
+        self.sheet_data = None
+        if prefetch:
+            self.sheet_data = self.fetch_all_sheets()
+
+    def fetch_all_sheets(self):
+        meta = safe_gspread_call(self.sheets.fetch_sheet_metadata)
+        ranges = [sheet['properties']['title'] for sheet in meta['sheets']]
+        data = safe_gspread_call(self.sheets.values_batch_get, [ranges])
+
+        all_sheets = {}
+
+        for sheet in data["valueRanges"]:
+            sheet_name = sheet["range"].split("!")[0]
+            if sheet_name.startswith("'"):
+                sheet_name = sheet_name[1:]
+            if sheet_name.endswith("'"):
+                sheet_name = sheet_name[:-1]
+            
+            ssvalues = sheet["values"]
+
+            keys = ssvalues[0]
+            values = ssvalues[1:]
+
+            all_sheets[sheet_name] = [dict(zip(keys, row)) for row in values]
+
+        return all_sheets
 
     def get_worksheet_records(self, sheet_name):
+        if self.sheet_data is not None:
+            if sheet_name not in self.sheet_data:
+                raise ValueError(f"{sheet_name} is not in the spreadsheet!")
+            return self.sheet_data[sheet_name]
         try:
             # ws = self.sheets.worksheet(sheet_name)
             ws = safe_gspread_call(self.sheets.worksheet, [sheet_name])
