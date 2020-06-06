@@ -44,7 +44,7 @@ class Assignment:
         grace_period: GracePeriod=None,
         gsheets_grades=None,
         extra_credit: bool=None,
-        does_not_contribulte: bool=None,
+        does_not_contribute: bool=None,
     ):
         tmp = f": {name}" if name is not None else ""
         init_str = f"Initializing assignment {id}{tmp}..."
@@ -94,9 +94,9 @@ class Assignment:
         if grace_period is None:
             grace_period = self.category.grace_period
         self.grace_period = grace_period
-        if does_not_contribulte is None:
-            does_not_contribulte = self.category.does_not_contribulte
-        self.does_not_contribulte = does_not_contribulte
+        if does_not_contribute is None:
+            does_not_contribute = self.category.does_not_contribute
+        self.does_not_contribute = does_not_contribute
         self.percentage = percentage
         self.hidden = hidden or category.hidden
         self.data = {}
@@ -389,7 +389,7 @@ class StudentAssignmentData:
         
         if score is not None or course_points is not None:
             s += "score: {} / {}\n".format(score, self.assignment.out_of)
-            if not self.assignment.does_not_contribulte:
+            if not self.assignment.does_not_contribute:
                 s += "course points: {} / {}\n\n".format(course_points, self.get_total_possible())
         
         if entered:
