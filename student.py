@@ -89,13 +89,13 @@ class Student:
             tp = 1
         return self.total_points(c=c, with_hidden=with_hidden) + (c.get_raw_additional_pts() * (c.get_total_possible(only_inputted=True) / tp))
 
-    def get_grade(self, c, score=None, with_hidden=False) -> str:
+    def get_grade(self, c, score=None, with_hidden=False, ignore_pnp=False) -> str:
         if self.incomplete:
             return "I"
         if score is None:
             score = self.get_total_points_with_class(c, with_hidden=with_hidden)
 
-        if not self.is_for_grade() and self.grade_status in PNP.PNP_Types.keys():
+        if not ignore_pnp and not self.is_for_grade() and self.grade_status in PNP.PNP_Types.keys():
             pnp = PNP.PNP_Types[self.grade_status]
             if c.grade_bins.is_passing(score, self.grade_status):
                 return pnp.pass_value

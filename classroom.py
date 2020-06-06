@@ -269,13 +269,13 @@ class Classroom:
                 return False
         return True
 
-    def get_grade_bins_count(self, with_hidden=False, inlcude_pnp=False):
+    def get_grade_bins_count(self, with_hidden=False, include_pnp=False):
         grade_bin_counts = {}
         all_in = self.all_inputted()
         for student in self.students:
-            if student.active_student and (inlcude_pnp or student.is_for_grade()):
+            if student.active_student and (include_pnp or student.is_for_grade()):
                 if all_in:
-                    gb = student.get_grade(self, with_hidden=with_hidden)
+                    gb = student.get_grade(self, with_hidden=with_hidden, ignore_pnp=include_pnp)
                 else:
                     gb = student.get_approx_grade_id(self, with_hidden=with_hidden)
                 if gb not in grade_bin_counts:
@@ -289,15 +289,15 @@ class Classroom:
             grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden)
         return get_class_gpa_average(grade_bins_count, self.grade_bins)
 
-    def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False):
+    def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False, include_pnp=False):
         """This will print things like how many students, how many of each grade, etc...."""
         normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
         if grade_bin_counts is None:
-            grade_bin_counts = self.get_grade_bins_count(with_hidden=with_hidden)
+            grade_bin_counts = self.get_grade_bins_count(with_hidden=with_hidden, include_pnp=include_pnp)
         return get_class_statistics_str(grade_bin_counts, self.grade_bins)
 
-    def print_class_statistics(self, with_hidden=False):
-        print(self.get_class_statistics_str(with_hidden=with_hidden))
+    def print_class_statistics(self, *args, **kwargs):
+        print(self.get_class_statistics_str(*args, **kwargs))
 
     def get_class_points_stats_str(self, with_hidden=False, skip_non_roster=True, with_quartile=True):
         all_points = []

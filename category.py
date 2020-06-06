@@ -20,7 +20,7 @@ class Category:
         hidden: bool=False,
         extra_credit: bool=False,
         drop_lowest_n_assignments: int=0,
-        does_not_contribulte: bool=False,
+        does_not_contribute: bool=False,
     ):
         init_str = f"Initializing category {name}..."
         init_str_done = init_str + "Done!"
@@ -46,7 +46,7 @@ class Category:
         self.hidden = hidden
         self.extra_credit = extra_credit
         self.drop_lowest_n_assignments = drop_lowest_n_assignments
-        self.does_not_contribulte = does_not_contribulte
+        self.does_not_contribute = does_not_contribute
         print(init_str_done)
 
     def add_assignments(self, assignments: list):
@@ -259,7 +259,7 @@ class StudentCategoryData:
         return s
     
     def get_total_score(self, with_hidden=False, ignore_not_for_points=False):
-        if self.category.does_not_contribulte and not ignore_not_for_points:
+        if self.category.does_not_contribute and not ignore_not_for_points:
             return 0
         total = 0
         for a in self.assignments_data:

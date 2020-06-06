@@ -90,12 +90,17 @@ class GradeBins:
 
         if normal_max_points is not None:
             mxpts = normal_max_points
-        self.normal_max_points = mxpts + uniform_adjust
+        
+        self.normal_max_points = mxpts
+        if uniform_adjust:
+            self.normal_max_points += uniform_adjust
         
         if isinstance(pass_threshold, Bin):
             self.pass_threshold = pass_threshold.min
         elif isinstance(pass_threshold, (int, float)):
-            self.pass_threshold = pass_threshold + uniform_adjust
+            self.pass_threshold = pass_threshold
+            if uniform_adjust:
+                self.pass_threshold += uniform_adjust
         else:
             self.pass_threshold = Max()
         
@@ -107,7 +112,9 @@ class GradeBins:
             if isinstance(value, Bin):
                 self.pass_threshold_map[identifier] = value.min
             elif isinstance(value, (int, float)):
-                self.pass_threshold_map[identifier] = value + uniform_adjust
+                self.pass_threshold_map[identifier] = value
+                if uniform_adjust:
+                    self.pass_threshold_map[identifier] += uniform_adjust
             else:
                 self.pass_threshold_map[identifier] = Max()
             
@@ -115,7 +122,7 @@ class GradeBins:
         bins_copy = []
         for b in self.bins.values():
             bins_copy.append(b.copy())
-        return GradeBins(bins_copy, self.pass_threshold, self.normal_max_points)
+        return GradeBins(bins_copy, self.pass_threshold, pass_threshold_map=self.pass_threshold_map, normal_max_points=self.normal_max_points)
 
     def __repr__(self):
         return self.__str__()
@@ -196,3 +203,4 @@ class PNP:
         self.PNP_Types[grade_type] = self
 PNP("EPN", "P", "NP")
 PNP("ESU", "S", "U")
+PNP("DPN", "P", "NP")
