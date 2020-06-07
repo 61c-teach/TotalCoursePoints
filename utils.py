@@ -35,24 +35,77 @@ def safe_gspread_call(fn, args=[], kwargs={}, sleep_timeout=gspread_timeout, att
             sleep(sleep_timeout)
     print("Failed to grab resource!")
 
+class ResourceExhaustedError(Exception):
+    pass
+
+class GSheetCredentialsManager:
+    SCOPE = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+    def __init__(self, credentials_list: [str]):
+        self.all_creds = [
+            ServiceAccountCredentials.from_json_keyfile_name(credentials, self.SCOPE) 
+            for credentials in credentials_list
+            ]
+        self.clients = []
+
+    def get_clients(self):
+        for i, cred in enumerate(self.all_creds):
+            if i <= len(self.clients):
+                self.clients.append(gspread.authorize(cred))
+            yield self.clients[i]
+
+    def safe_gspread_call(self, sheet_key, fn_name, args=[], kwargs={}, sleep_timeout=gspread_timeout, attempts=gspread_attempts):
+        i = 0
+        cond = lambda: attempts <= 0 or i < attempts
+        def attempt(fn):
+            try:
+                return fn(*args, *kwargs)
+            except APIError as e:
+                try:
+                    if json.loads(e.response.text)["error"]["status"] == RESOURCE_EXHAUSTED:
+                        raise ResourceExhaustedError
+                    raise e
+                except Exception:
+                    raise e
+        while cond():
+            for j, client in enumerate(self.get_clients()):
+                try:
+                    return attempt(getattr(client.open_by_key(sheet_key), fn_name))
+                except ResourceExhaustedError as e:
+                    print(f"Failed to use client {j}, trying a new one...")
+            i += 1
+            print(f"The resources have been exhausted (attempt: {i - 1})!" + (f" Retrying in {sleep_timeout} seconds..." if cond() else ""))
+            if cond():
+                sleep(sleep_timeout)
+        print("Failed to grab resource!")
+
+
 class GSheetBase:
     default_credentials = 'credentials.json'
-    def __init__(self, sheet_key, credentials=None, prefetch=True):
+    default_credentials_list = None
+    def __init__(self, sheet_key, credentials=None, credentials_manager: GSheetCredentialsManager=None, prefetch=True):
         if credentials is None:
             credentials = self.default_credentials
-        scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
-        creds = ServiceAccountCredentials.from_json_keyfile_name(credentials, scope)
-        self.client = gspread.authorize(creds)
-        self.sheets = self.client.open_by_key(sheet_key)
+        # scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+        # creds = ServiceAccountCredentials.from_json_keyfile_name(credentials, scope)
+        # self.client = gspread.authorize(creds)
+        if credentials_manager is None:
+            if self.default_credentials_list is not None:
+                credentials_manager = GSheetCredentialsManager(self.default_credentials_list)
+            else:
+                credentials_manager = GSheetCredentialsManager([credentials])
+        self.cred_manager = credentials_manager
+        # self.sheets = self.client.open_by_key(sheet_key)
         self.sheet_key = sheet_key
         self.sheet_data = None
         if prefetch:
             self.sheet_data = self.fetch_all_sheets()
 
     def fetch_all_sheets(self):
-        meta = safe_gspread_call(self.sheets.fetch_sheet_metadata)
+        # meta = safe_gspread_call(self.sheets.fetch_sheet_metadata)
+        meta = self.cred_manager.safe_gspread_call(self.sheet_key, "fetch_sheet_metadata")
         ranges = [sheet['properties']['title'] for sheet in meta['sheets']]
-        data = safe_gspread_call(self.sheets.values_batch_get, [ranges])
+        # data = safe_gspread_call(self.sheets.values_batch_get, [ranges])
+        data = self.cred_manager.safe_gspread_call(self.sheet_key, "values_batch_get", args=[ranges])
 
         all_sheets = {}
 
@@ -79,7 +132,7 @@ class GSheetBase:
             return self.sheet_data[sheet_name]
         try:
             # ws = self.sheets.worksheet(sheet_name)
-            ws = safe_gspread_call(self.sheets.worksheet, [sheet_name])
+            ws = self.cred_manager.safe_gspread_call(self.sheet_key, "worksheet", args=[sheet_name])
         except Exception as e:
             print("Encountered an error when accessing sheet {}.".format(sheet_name))
             print(e)
@@ -131,10 +184,16 @@ class GSheetExtensions(GSheetBase):
     
     def get_all_extensions(self, process_gsheet_cell=lambda cell: Time(parse=cell)):
         # worksheets = self.sheets.worksheets()
-        worksheets = safe_gspread_call(self.sheets.worksheets)
+        if self.sheet_data is None:
+            worksheets = self.cred_manager.safe_gspread_call(self.sheet_key, "worksheets")
+        else:
+            worksheets = list(self.sheet_data.keys())
         extensions = {}
         for ws in worksheets:
-            title = ws.title
+            if isinstance(ws, str):
+                title = ws
+            else:
+                title = ws.title
             if title not in self.ignore_sheets:
                 data = self.get_sheet_extensions(title, process_gsheet_cell=process_gsheet_cell)
                 if data is None:
