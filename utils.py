@@ -64,18 +64,24 @@ class GSheetCredentialsManager:
                 raise_error = e
             if raise_error is not None:
                 e: Exception = raise_error
+                raise_resource_error = False
                 try:
                     if json.loads(e.response.text)["error"]["status"] == RESOURCE_EXHAUSTED:
-                        raise ResourceExhaustedError()
-                    raise e
+                        raise_resource_error = True
+                    else:
+                        raise e
                 except Exception:
                     raise e
+                if raise_resource_error:
+                    raise ResourceExhaustedError()
         while cond():
-            for j, client in enumerate(self.get_clients()):
+            j = 0
+            for client in self.get_clients():
                 try:
                     return attempt(getattr(client.open_by_key(sheet_key), fn_name))
                 except ResourceExhaustedError as e:
                     print(f"Failed to use client {j}, trying a new one...")
+                j += 1
             i += 1
             print(f"The resources have been exhausted (attempt: {i - 1})!" + (f" Retrying in {sleep_timeout} seconds..." if cond() else ""))
             if cond():
