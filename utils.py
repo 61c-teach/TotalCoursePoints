@@ -57,12 +57,16 @@ class GSheetCredentialsManager:
         i = 0
         cond = lambda: attempts <= 0 or i < attempts
         def attempt(fn):
+            raise_error = None
             try:
                 return fn(*args, *kwargs)
             except APIError as e:
+                raise_error = e
+            if raise_error is not None:
+                e: Exception = raise_error
                 try:
                     if json.loads(e.response.text)["error"]["status"] == RESOURCE_EXHAUSTED:
-                        raise ResourceExhaustedError
+                        raise ResourceExhaustedError()
                     raise e
                 except Exception:
                     raise e
