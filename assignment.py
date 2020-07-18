@@ -362,10 +362,14 @@ class StudentAssignmentData:
             course_points = None
         elif not self.assignment.data_loaded:
             s += "The scores for this assignment have not been entered yet!\n"
+            if self.extension_time.get_seconds() > 0:
+                s += "extension time: {}\n".format(self.extension_time)
             score = "-"
             course_points = "-"
         elif self.assignment.data_loaded and not self.data_found:
             s += "Could not find a score for this assignment!\n"
+            if self.extension_time.get_seconds() > 0:
+                s += "extension time: {}\n".format(self.extension_time)
             entered = True
             score = 0
             course_points = 0
