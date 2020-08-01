@@ -21,6 +21,7 @@ class Category:
         extra_credit: bool=False,
         drop_lowest_n_assignments: int=0,
         does_not_contribute: bool=False,
+        max_late_time: int = None,
     ):
         init_str = f"Initializing category {name}..."
         init_str_done = init_str + "Done!"
@@ -47,6 +48,7 @@ class Category:
         self.extra_credit = extra_credit
         self.drop_lowest_n_assignments = drop_lowest_n_assignments
         self.does_not_contribute = does_not_contribute
+        self.max_late_time = None
         print(init_str_done)
 
     def add_assignments(self, assignments: list):

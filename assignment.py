@@ -45,6 +45,7 @@ class Assignment:
         gsheets_grades=None,
         extra_credit: bool=None,
         does_not_contribute: bool=None,
+        max_late_time: int=None,
     ):
         tmp = f": {name}" if name is not None else ""
         init_str = f"Initializing assignment {id}{tmp}..."
@@ -91,6 +92,11 @@ class Assignment:
         if blanket_late_penalty is None:
             blanket_late_penalty = category.blanket_late_penalty
         self.blanket_late_penalty = blanket_late_penalty
+
+        if max_late_time is None:
+            max_late_time = category.max_late_time
+        self.max_late_time = max_late_time
+
         if grace_period is None:
             grace_period = self.category.grace_period
         self.grace_period = grace_period
@@ -341,7 +347,7 @@ class StudentAssignmentData:
         num_late_time = self.get_num_late()
         if self.assignment.blanket_late_penalty and num_late_time > 0:
             num_late_time = 1
-        penalty = 1 - min(num_late_time * self.assignment.late_penalty, 1)
+        penalty = (1 - min(num_late_time * self.assignment.late_penalty, 1)) if (self.assignment.max_late_time is None or num_late_time <= self.assignment.max_late_time) else 0
         score = self.score + (self.assignment.additional_points if with_additional_points else 0)
         if convert_to_course_points:
             score *= (self.assignment.get_total_possible() / self.assignment.out_of)
