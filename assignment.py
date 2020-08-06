@@ -391,6 +391,9 @@ class StudentAssignmentData:
                     s += f"adjusted late time: {adj_late}\n"
                     if self.assignment.category.max_slip_count is not None:
                         s += f"initial late count: {adj_late.get_count(self.assignment.late_interval)}\n"
+                else:
+                    if self.extension_time.get_seconds() > 0:
+                        s += "extension time: {}\n".format(self.extension_time)
                 if self.assignment.category.max_slip_count is not None:
                     s += "slip time count: {}\n".format(self.slip_time_used)
                 s += f"late count: {self.get_num_late()}\n"
