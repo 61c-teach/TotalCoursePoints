@@ -15,6 +15,7 @@ class Student:
         self.extensionData = extensionData
         self.incomplete = incomplete
         self.grade_status = grade_status
+        self.override_score = None
         # FIXME Parse extension data!
         if not extensionData:
             self.extensionData = {}
@@ -28,6 +29,12 @@ class Student:
                 self.extensionData = {}
         self.secret = secret
         self.reset_comment()
+
+    def set_override_score(self, score):
+        # Set raw score of student. If set to None, it will be ignored.
+        if not isinstance(score, (int, float)) or not None:
+            raise ValueError("Score must be int, float, or None")
+        self.override_score = score
 
     def append_comment(self, *args, sep=' ', end='\n'):
         self.personal_comment += sep.join(args) + end
@@ -60,6 +67,8 @@ class Student:
         self.categoryData[data.category.name] = data
 
     def total_points(self, with_hidden=False, c=None):
+        if self.override_score is not None:
+            return self.override_score
         ignore_categories = set([])
         if c is not None:
             ignore_categories = c.get_ignore_category()
