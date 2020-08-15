@@ -133,6 +133,7 @@ class StudentCategoryData:
         self.assignments_data: list(StudentAssignmentData) = assignments
         self.get_total_possible = category.get_total_possible
         self.reset_comment()
+        self.override_score = None
 
     def append_comment(self, *args, sep=' ', end='\n'):
         self.personal_comment += sep.join(args) + end
@@ -263,6 +264,8 @@ class StudentCategoryData:
     def get_total_score(self, with_hidden=False, ignore_not_for_points=False):
         if self.category.does_not_contribute and not ignore_not_for_points:
             return 0
+        if self.override_score is not None:
+            return self.override_score
         total = 0
         for a in self.assignments_data:
             if a.is_hidden() and not with_hidden:

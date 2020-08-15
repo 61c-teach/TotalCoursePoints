@@ -32,7 +32,7 @@ class Student:
 
     def set_override_score(self, score):
         # Set raw score of student. If set to None, it will be ignored.
-        if not isinstance(score, (int, float)) or not None:
+        if not (isinstance(score, (int, float)) or score is None):
             raise ValueError("Score must be int, float, or None")
         self.override_score = score
 
