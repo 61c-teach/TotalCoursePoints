@@ -250,7 +250,7 @@ class StudentCategoryData:
     def all_inputted(self, with_hidden=False):
         return self.category.all_inputted(with_hidden=with_hidden)
 
-    def get_str(self):
+    def get_str(self, score=None):
         s = "{}{}Here is the individual list of assignments:\n==========\n".format(self.category.comment, self.get_comment())
         slip_time_used = 0
         for assign in self.assignments_data:
@@ -258,7 +258,7 @@ class StudentCategoryData:
             s += assign.get_str()
         if self.category.max_slip_count:
             s += "\nSlip time left: {} out of {}\n".format(self.category.max_slip_count - slip_time_used, self.category.max_slip_count)
-        s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(ignore_not_for_points=True), self.category.get_total_possible())
+        s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(ignore_not_for_points=True) if score is None else score, self.category.get_total_possible())
         return s
     
     def get_total_score(self, with_hidden=False, ignore_not_for_points=False):

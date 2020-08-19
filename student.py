@@ -202,9 +202,12 @@ class Student:
             tests.append({"name": "Class Stats", "output": stats_str})
         for cat in self.categoryData.values():
             if not cat.is_hidden():
+                score = cat.get_total_score(ignore_not_for_points=True)
                 tests.append({
                     "name": cat.category.name,
-                    "output": cat.get_str()
+                    "output": cat.get_str(score=score),
+                    "score": round(score, 4), 
+                    "max_score": round(cat.category.get_total_possible(), 4)
                 })
         return results
 
