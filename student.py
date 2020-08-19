@@ -207,7 +207,7 @@ class Student:
                     "name": cat.category.name,
                     "output": cat.get_str(score=score),
                     "score": round(score, 4), 
-                    "max_score": round(cat.category.get_total_possible(), 4)
+                    # "max_score": round(cat.category.get_total_possible(), 4)
                 })
         return results
 
