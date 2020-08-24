@@ -103,6 +103,8 @@ class Assignment:
         if does_not_contribute is None:
             does_not_contribute = self.category.does_not_contribute
         self.does_not_contribute = does_not_contribute
+        if percentage is None:
+            percentage = self.category.percentage
         self.percentage = percentage
         self.hidden = hidden or category.hidden
         self.data = {}
