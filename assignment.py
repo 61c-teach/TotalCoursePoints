@@ -108,6 +108,7 @@ class Assignment:
         self.percentage = percentage
         self.hidden = hidden or category.hidden
         self.data = {}
+        self.edata = {}
         self.scores = []
         self.all_scores = []
         self.data_loaded = True
@@ -141,7 +142,11 @@ class Assignment:
         else:
             gdata = GSheetBase(gsheet)
         data = gdata.get_worksheet_records(data_sheet)
-        self.load_data(data)
+        try:
+            self.load_data(data)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
     def load_file(self, data_file: str=None):
         if data_file is None:
@@ -203,6 +208,18 @@ class Assignment:
                     if isinstance(self.data[sid], list):
                         self.data[sid].append(sad)
 
+                edat = self.edata.get(email)
+                if edat is None:
+                    self.edata[email] = sad
+                else:
+                    if isinstance(email, list):
+                        edat.append(sad)
+                    else:
+                        self.edata[email] = [edat, sad]
+                if email in self.edata:
+                    if isinstance(self.edata[email], list):
+                        self.edata[email].append(sad)
+
     def get_student_data(self, student: Student) -> StudentAssignmentData:
         if not self.data_loaded:
             return StudentAssignmentData(
@@ -214,7 +231,11 @@ class Assignment:
                 self,
                 data_loaded=False
             )
+        if self.id == "lec02":
+            import ipdb; ipdb.set_trace()
         dat = self.data.get(student.sid)
+        if dat is None:
+            dat = self.edata.get(student.email)
         if isinstance(dat, list):
             for item in dat:
                 if item.email == student.email:
