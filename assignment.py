@@ -231,8 +231,6 @@ class Assignment:
                 self,
                 data_loaded=False
             )
-        if self.id == "lec02":
-            import ipdb; ipdb.set_trace()
         dat = self.data.get(student.sid)
         if dat is None:
             dat = self.edata.get(student.email)
