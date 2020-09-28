@@ -9,7 +9,7 @@ Welcome to TotalCoursePoints's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   GettingStarted/index.rst
 
 
 Indices and tables
