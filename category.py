@@ -10,6 +10,7 @@ class Category:
         late_penalty: float = 1,
         late_interval: Time = Time(days=1),
         blanket_late_penalty: bool = False,
+        no_late_time: bool = False,
         max_slip_count: int = None,
         slip_interval: Time = Time(days=1),
         comment: str = "",
@@ -44,6 +45,7 @@ class Category:
         self.late_penalty = late_penalty
         self.late_interval = late_interval
         self.blanket_late_penalty = blanket_late_penalty
+        self.no_late_time = no_late_time
         self.grace_period = grace_period
         self.hidden = hidden
         self.extra_credit = extra_credit
