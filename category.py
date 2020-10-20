@@ -24,6 +24,7 @@ class Category:
         does_not_contribute: bool=False,
         max_late_time: int = None,
         percentage: bool = None,
+        give_perfect_score: bool=False,
     ):
         init_str = f"Initializing category {name}..."
         init_str_done = init_str + "Done!"
@@ -53,6 +54,7 @@ class Category:
         self.does_not_contribute = does_not_contribute
         self.max_late_time = None
         self.percentage = percentage
+        self.give_perfect_score = give_perfect_score
         print(init_str_done)
 
     def add_assignments(self, assignments: list):

@@ -47,6 +47,7 @@ class Assignment:
         extra_credit: bool=None,
         does_not_contribute: bool=None,
         max_late_time: int=None,
+        give_perfect_score: bool=None,
     ):
         tmp = f": {name}" if name is not None else ""
         init_str = f"Initializing assignment {id}{tmp}..."
@@ -110,6 +111,9 @@ class Assignment:
         if percentage is None:
             percentage = self.category.percentage
         self.percentage = percentage
+        if give_perfect_score is None:
+            give_perfect_score = self.category.give_perfect_score
+        self.give_perfect_score = give_perfect_score
         self.hidden = hidden or category.hidden
         self.data = {}
         self.edata = {}
@@ -367,6 +371,8 @@ class StudentAssignmentData:
         self.append_comment("This assignment has been dropped.")
 
     def get_course_points(self, with_additional_points: bool=True, convert_to_course_points=True):
+        if self.assignment.give_perfect_score:
+            return self.assignment.get_total_possible()
         if self.dropped:
             return 0
         num_late_time = 0 if self.assignment.no_late_time else self.get_num_late()
