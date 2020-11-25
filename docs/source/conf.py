@@ -21,6 +21,8 @@ project = 'Total Course Points'
 copyright = '2020, Stephan Kaminsky'
 author = 'Stephan Kaminsky'
 
+master_doc = 'index'
+
 
 # -- General configuration ---------------------------------------------------
 
