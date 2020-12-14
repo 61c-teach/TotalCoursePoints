@@ -204,3 +204,4 @@ class PNP:
 PNP("EPN", "P", "NP")
 PNP("ESU", "S", "U")
 PNP("DPN", "P", "NP")
+PNP("CPN", "P", "NP")
