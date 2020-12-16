@@ -438,7 +438,7 @@ def get_class_gpa_average(grade_bins_count, grade_bins):
 def get_class_statistics_str(grade_bin_counts, grade_bins, graph=True):
     """This will print things like how many students, how many of each grade, etc...."""
     # normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
-    normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F"]
+    normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "P", "NP", "S", "U"]
     ave_gpa = get_class_gpa_average(grade_bin_counts, grade_bins)
     ordered_grades = OrderedDict()
     for ngb in normal_grade_bins:
@@ -471,5 +471,9 @@ def get_class_statistics_str(grade_bin_counts, grade_bins, graph=True):
     # Ds = round((ordered_grades["D+"] + ordered_grades["D"] + ordered_grades["D-"]) / total * 100, 1)
     Ds = round((ordered_grades["D"]) / total * 100, 1)
     Fs = round((ordered_grades["F"]) / total * 100, 1)
-    ratio_str = f"A: {As}%\nB: {Bs}%\nC: {Cs}%\nD: {Ds}%\nF: {Fs}%\n"
+    Ps = round((ordered_grades["P"]) / total * 100, 1)
+    NPs = round((ordered_grades["NP"]) / total * 100, 1)
+    Ss = round((ordered_grades["S"]) / total * 100, 1)
+    Us = round((ordered_grades["U"]) / total * 100, 1)
+    ratio_str = f"A:  {As}%\nB:  {Bs}%\nC:  {Cs}%\nD:  {Ds}%\nF:  {Fs}%\nP:  {Ps}%\nNP: {NPs}%\nS:  {Ss}%\nU:  {Us}%\n"
     return f"Number of students per grade bin:\n{gbc_str}\nGrades Ratios:\n{ratio_str}\nClass average: {ave_gpa}\n"

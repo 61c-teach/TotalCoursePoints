@@ -6,3 +6,5 @@ A roster MUST have the following fields:
 Name,SID,Email
 Optional fields include:
 Secret,Extensions
+
+To install, run `pip install TotalCoursePoints`. To develop, create a virtualenv and run `pip install -e .`.

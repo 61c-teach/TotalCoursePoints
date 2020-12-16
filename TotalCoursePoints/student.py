@@ -114,7 +114,7 @@ class Student:
         b = c.grade_bins.in_bin(score)
         return b.id
 
-    def get_approx_grade_id(self, c, score=None, with_hidden=False) -> str:
+    def get_approx_grade_id(self, c, score=None, with_hidden=False, ignore_pnp=False) -> str:
         if self.incomplete:
             return "I"
         if score is None:
@@ -122,9 +122,9 @@ class Student:
         cur_score = score
         cur_max_score = c.get_total_possible(only_inputted=True)
         
-        if not self.is_for_grade() and self.grade_status in PNP.PNP_Types.keys():
+        if not ignore_pnp and not self.is_for_grade() and self.grade_status in PNP.PNP_Types.keys():
             pnp = PNP.PNP_Types[self.grade_status]
-            score = c.grade_bins.get_relative_score(cur_score, cur_max_score)
+            score = c.grade_bins.relative_score(cur_score, cur_max_score)
             if c.grade_bins.is_passing(score, self.grade_status):
                 return pnp.pass_value
             else:

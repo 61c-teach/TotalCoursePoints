@@ -2,7 +2,7 @@
 This is the classroom and its info.
 """
 from .assignment import Category
-from .grade_bins import GradeBins
+from .grade_bins import GradeBins, PNP
 from .student import Student
 from .utils import GSheetExtensions, Time, bar_plot_str, get_class_gpa_average, get_class_statistics_str
 import csv
@@ -23,7 +23,22 @@ GRADE_STATUS_MARKER = "ForGrade"
 INCOMPLETE_MARKER = "Incomplete"
 
 class Classroom:
+    """This is a class representation of your Classroom.
+
+    :param name: The name of your class.
+    :type name: str
+    :param class_id: The class ID of your class.
+    :type class_id: str
+    :param grade_bins: The grading bins of your class.
+    :type grade_bins: class:`TotalCoursePoints.GradeBins`
+    :param categories: Categories which your class has. You can specify this later.
+    :type iface: class: dict, optional
+    """
+
     def __init__(self, name: str, class_id: str, grade_bins: GradeBins, categories: dict={}, students: list=[], gsheets_grades=None, timezone=pytz.timezone("America/Los_Angeles"), raw_additional_pts: float=0, gs_leaderboard: bool=False):
+        """Constructor method
+        """
+
         self.grade_bins = grade_bins
         self.categories = categories
         self.students = students
@@ -269,31 +284,32 @@ class Classroom:
                 return False
         return True
 
-    def get_grade_bins_count(self, with_hidden=False, include_pnp=False):
+    def get_grade_bins_count(self, with_hidden=False, pnp_as_grade=False, show_pnp=True, actual_grades=False):
         grade_bin_counts = {}
         all_in = self.all_inputted()
         for student in self.students:
-            if student.active_student and (include_pnp or student.is_for_grade()):
-                if all_in:
-                    gb = student.get_grade(self, with_hidden=with_hidden, ignore_pnp=include_pnp)
-                else:
-                    gb = student.get_approx_grade_id(self, with_hidden=with_hidden)
-                if gb not in grade_bin_counts:
-                    grade_bin_counts[gb] = 1
-                else:
-                    grade_bin_counts[gb] += 1
+            if student.active_student:
+                std_is_pnp = (not student.is_for_grade() and student.grade_status in PNP.PNP_Types.keys())
+                if show_pnp or not std_is_pnp:
+                    if all_in or actual_grades:
+                        gb = student.get_grade(self, with_hidden=with_hidden, ignore_pnp=pnp_as_grade)
+                    else:
+                        gb = student.get_approx_grade_id(self, with_hidden=with_hidden, ignore_pnp=pnp_as_grade)
+                    if gb not in grade_bin_counts:
+                        grade_bin_counts[gb] = 1
+                    else:
+                        grade_bin_counts[gb] += 1
         return grade_bin_counts
 
-    def get_class_gpa_average(self, grade_bins_count=None, with_hidden=False):
+    def get_class_gpa_average(self, grade_bins_count=None, with_hidden=False, actual_grades=False):
         if grade_bins_count is None:
-            grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden)
+            grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden, actual_grades=actual_grades)
         return get_class_gpa_average(grade_bins_count, self.grade_bins)
 
-    def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False, include_pnp=False):
+    def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False, pnp_as_grade=False, show_pnp=True, actual_grades=False):
         """This will print things like how many students, how many of each grade, etc...."""
-        normal_grade_bins = ["A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"]
         if grade_bin_counts is None:
-            grade_bin_counts = self.get_grade_bins_count(with_hidden=with_hidden, include_pnp=include_pnp)
+            grade_bin_counts = self.get_grade_bins_count(with_hidden=with_hidden, pnp_as_grade=pnp_as_grade, show_pnp=show_pnp, actual_grades=actual_grades)
         return get_class_statistics_str(grade_bin_counts, self.grade_bins)
 
     def print_class_statistics(self, *args, **kwargs):

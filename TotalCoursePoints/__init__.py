@@ -14,6 +14,5 @@ __all__ = [
     "StudentCategoryData",
     "Assignment",
     "StudentAssignmentData",
-    # "GradescopeAPIClient",
     "PNP"
 ]
