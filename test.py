@@ -1,3 +1,4 @@
+from TotalCoursePoints import *
 from TotalCoursePoints.assignment import *
 from TotalCoursePoints.category import *
 from TotalCoursePoints.classroom import *

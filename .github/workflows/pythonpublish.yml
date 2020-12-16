@@ -25,8 +25,8 @@ jobs:
         pip install setuptools wheel twine
     - name: Test Install
       run: |
-        pip install -e .[cli]
-        gradescope --help
+        pip install -e .
+        python3 test.py
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
