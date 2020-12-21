@@ -4,7 +4,7 @@ with open("README.md") as f:
     readme = f.read()
 
 setup(name='TotalCoursePoints',
-      version='1.0.0',
+      version='1.0.1',
       description="This is the backend which makes generating student grades easier.",
       long_description=readme,
       author='Stephan Kaminsky',

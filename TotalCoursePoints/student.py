@@ -176,7 +176,7 @@ class Student:
         with open(results_file, "w") as f:
             f.write(jsondata)
 
-    def dump_str(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False):
+    def dump_str(self, c, class_dist: bool=False, class_stats_all: bool=False, class_stats_graded: bool=False, include_rank=False):
         tests = []
         results = {
             "score":self.get_total_points_with_class(c),
@@ -188,15 +188,20 @@ class Student:
                 "value": results["score"]
             }
         tests.append({"name":"Total", "output": self.main_results_str(c, include_rank=include_rank)})
-        if class_dist or class_stats:
+        if class_dist or class_stats_all or class_stats_graded:
             stats_str = ""
-            if class_stats:
-                title = "Class Statistics:"
+            if class_stats_graded:
+                title = "Class Statistics (Graded):"
                 stats_str += f"{title}\n" + ("-" * len(title)) + "\n"
                 stats_str += c.get_class_points_stats_str()
                 stats_str += "\n"
+            if class_stats_all:
+                title = "Class Statistics (All):"
+                stats_str += f"{title}\n" + ("-" * len(title)) + "\n"
+                stats_str += c.get_class_points_stats_str(only_for_grade=False)
+                stats_str += "\n"
             if class_dist:
-                if class_stats:
+                if class_stats_all or class_stats_graded:
                     stats_str += ("_" * 35) + ("\n" * 2)
                 stats_str += c.get_class_statistics_str()
             tests.append({"name": "Class Stats", "output": stats_str})
@@ -211,8 +216,8 @@ class Student:
                 })
         return results
 
-    def dump_result(self, c, class_dist: bool=False, class_stats: bool=False, include_rank=False, results_file:str="/autograder/results/results.json"):
-        results = self.dump_str(c, class_dist=class_dist, class_stats=class_stats, include_rank=include_rank)
+    def dump_result(self, c, class_dist: bool=False, class_stats_all: bool=False, class_stats_graded: bool=False, include_rank=False, results_file:str="/autograder/results/results.json"):
+        results = self.dump_str(c, class_dist=class_dist, class_stats_all=class_stats_all, class_stats_graded=class_stats_graded, include_rank=include_rank)
         self.dump_data(results_file, results)
 
     def get_raw_data(self, c, approx_grade: bool=False, with_hidden=True):

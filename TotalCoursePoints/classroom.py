@@ -315,10 +315,12 @@ class Classroom:
     def print_class_statistics(self, *args, **kwargs):
         print(self.get_class_statistics_str(*args, **kwargs))
 
-    def get_class_points_stats_str(self, with_hidden=False, skip_non_roster=True, with_quartile=True):
+    def get_class_points_stats_str(self, with_hidden=False, skip_non_roster=True, with_quartile=True, only_for_grade=True):
         all_points = []
         for student in self.students:
             if skip_non_roster and not student.active_student:
+                continue
+            if only_for_grade and not student.is_for_grade():
                 continue
             all_points.append(student.get_total_points_with_class(self, with_hidden=with_hidden))
         if len(all_points) == 0:
