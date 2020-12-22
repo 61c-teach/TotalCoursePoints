@@ -301,9 +301,9 @@ class Classroom:
                         grade_bin_counts[gb] += 1
         return grade_bin_counts
 
-    def get_class_gpa_average(self, grade_bins_count=None, with_hidden=False, actual_grades=False):
+    def get_class_gpa_average(self, grade_bins_count=None, pnp_as_grade=False, with_hidden=False, actual_grades=False):
         if grade_bins_count is None:
-            grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden, actual_grades=actual_grades)
+            grade_bins_count = self.get_grade_bins_count(with_hidden=with_hidden, actual_grades=actual_grades, pnp_as_grade=pnp_as_grade)
         return get_class_gpa_average(grade_bins_count, self.grade_bins)
 
     def get_class_statistics_str(self, grade_bin_counts=None, graph=True, with_hidden=False, pnp_as_grade=False, show_pnp=True, actual_grades=False):
