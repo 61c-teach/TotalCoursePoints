@@ -337,7 +337,7 @@ class Classroom:
                 quartile += f"{p}th percentile: {np.percentile(all_points, p)}\n"
         return f"mean: {mean}\nmedian: {median}\nstd dev: {std}\nmax: {pmax}\nmin: {pmin}{quartile}"
 
-    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True, with_hidden=False):
+    def est_gpa(self, min_ave_gpa, start_pts=1, max_pts=20, max_a_plus=None, adjust_a_plus: bool=True, with_hidden=False, pnp_as_grade=False):
         orig_bins = self.grade_bins
         base_raw_points = self.get_raw_additional_pts()
         have_max_a_plus = max_a_plus == 0
@@ -352,7 +352,7 @@ class Classroom:
                 self.grade_bins = orig_bins.copy()
                 self.grade_bins.increment_A_plus(a_plus_adjust)
             self.set_raw_additional_pts(i)
-            gbc = self.get_grade_bins_count(with_hidden=with_hidden)
+            gbc = self.get_grade_bins_count(with_hidden=with_hidden, pnp_as_grade=pnp_as_grade)
             a_plus = gbc.get("A+")
             a_plus = 0 if a_plus is None else a_plus
             ave_gpa = self.get_class_gpa_average(gbc)
