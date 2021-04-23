@@ -176,6 +176,9 @@ class GSheetExtensions(GSheetBase):
             return None
         linked = {}
         for row in data:
+            if self.id_column not in row:
+                print(f"Invalid Row!: {row}")
+                continue
             _id = str(row[self.id_column])
             stdext = {}
             linked[_id] = stdext

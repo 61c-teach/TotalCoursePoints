@@ -326,6 +326,8 @@ class StudentAssignmentData:
             data_loaded: bool=True,
             data_found: bool=True,
             dropped: bool=False,
+            hidden: bool=None,
+            late_interval: Time=None
         ):
         if time_late is None:
             time_late = Time()
@@ -342,6 +344,21 @@ class StudentAssignmentData:
         self.data_found = data_found
         self.get_total_possible = assignment.get_total_possible
         self.dropped = dropped
+        self.hidden = hidden
+        self.late_interval = late_interval
+
+        self.give_perfect_score = self.assignment.give_perfect_score
+        self.get_total_possible = self.assignment.get_total_possible
+        self.no_late_time = self.assignment.no_late_time
+        self.blanket_late_penalty = self.assignment.blanket_late_penalty
+        self.late_penalty = self.assignment.late_penalty
+        self.max_late_time = self.assignment.max_late_time
+        self.additional_points = self.assignment.additional_points
+        self.out_of = self.assignment.out_of
+        self.extra_credit = self.assignment.extra_credit
+        self.max_slip_count = self.assignment.category.max_slip_count
+        self.does_not_contribute = self.assignment.does_not_contribute
+        
         self.reset_comment()
 
     def append_comment(self, *args, sep=' ', end='\n'):
@@ -353,42 +370,49 @@ class StudentAssignmentData:
     def get_comment(self):
         return self.personal_comment
 
+    def get_late_interval(self):
+        if self.late_interval is None:
+            return self.late_interval
+        return self.late_interval
+
     def is_hidden(self):
-        return self.assignment.hidden
+        if self.hidden is None:
+            return self.hidden
+        return self.hidden
 
     def adjusted_late_time(self):
         return max(Time(), self.time_late - self.extension_time)
 
     def get_late_time(self):
-        return max(Time(), self.adjusted_late_time() - (self.slip_time_used * self.assignment.late_interval))
+        return max(Time(), self.adjusted_late_time() - (self.slip_time_used * self.get_late_interval()))
 
     def get_num_late(self):
         late_time = self.get_late_time()
-        return late_time.get_count(self.assignment.late_interval)
+        return late_time.get_count(self.get_late_interval())
     
     def drop_assignment(self):
         self.dropped = True
         self.append_comment("This assignment has been dropped.")
 
     def get_course_points(self, with_additional_points: bool=True, convert_to_course_points=True):
-        if self.assignment.give_perfect_score:
-            return self.assignment.get_total_possible()
+        if self.give_perfect_score:
+            return self.get_total_possible()
         if self.dropped:
             return 0
-        num_late_time = 0 if self.assignment.no_late_time else self.get_num_late()
-        if self.assignment.blanket_late_penalty and num_late_time > 0:
+        num_late_time = 0 if self.no_late_time else self.get_num_late()
+        if self.blanket_late_penalty and num_late_time > 0:
             num_late_time = 1
-        penalty = (1 - min(num_late_time * self.assignment.late_penalty, 1)) if (self.assignment.max_late_time is None or num_late_time <= self.assignment.max_late_time) else 0
-        score = self.score + (self.assignment.additional_points if with_additional_points else 0)
+        penalty = (1 - min(num_late_time * self.late_penalty, 1)) if (self.max_late_time is None or num_late_time <= self.max_late_time) else 0
+        score = self.score + (self.additional_points if with_additional_points else 0)
         if convert_to_course_points:
-            score *= (self.assignment.get_total_possible() / self.assignment.out_of)
+            score *= (self.get_total_possible() / self.out_of)
         return penalty * score
 
     def is_inputted(self, with_hidden=False):
         return self.assignment.is_inputted(with_hidden=with_hidden)
 
     def is_worth_points(self):
-        return not (self.assignment.get_total_possible() == 0 and not self.assignment.extra_credit)
+        return not (self.get_total_possible() == 0 and not self.extra_credit)
     
     def get_str(self):
         s = "{}[{}] {}\n{}{}\n**********\n".format("(hidden) " if self.is_hidden() else "", self.assignment.id, self.assignment.name if self.assignment.name else "", self.assignment.comment, self.get_comment())
@@ -414,16 +438,16 @@ class StudentAssignmentData:
             entered = True
             score = self.score
             if self.time_late > 0:
-                s += f"raw score: {score} / {self.assignment.out_of}\n"
-                if not self.assignment.no_late_time:
+                s += f"raw score: {score} / {self.out_of}\n"
+                if not self.no_late_time:
                     s += f"time late: {self.time_late}\n"
                     if self.extension_time.get_seconds() > 0:
                         s += "extension time: {}\n".format(self.extension_time)
                         adj_late = self.adjusted_late_time()
                         s += f"adjusted late time: {adj_late}\n"
-                        if self.assignment.category.max_slip_count is not None:
-                            s += f"initial late count: {adj_late.get_count(self.assignment.late_interval)}\n"
-                    if self.assignment.category.max_slip_count is not None:
+                        if self.max_slip_count is not None:
+                            s += f"initial late count: {adj_late.get_count(self.get_late_interval())}\n"
+                    if self.max_slip_count is not None:
                         s += "slip time count: {}\n".format(self.slip_time_used)
                     s += f"late count: {self.get_num_late()}\n"
                 score = self.get_course_points(convert_to_course_points=False)
@@ -433,8 +457,8 @@ class StudentAssignmentData:
             course_points = self.get_course_points()
         
         if score is not None or course_points is not None:
-            s += "score: {} / {}\n".format(score, self.assignment.out_of)
-            if not self.assignment.does_not_contribute:
+            s += "score: {} / {}\n".format(score, self.out_of)
+            if not self.does_not_contribute:
                 s += "course points: {} / {}\n\n".format(course_points, self.get_total_possible())
         
         if entered:
