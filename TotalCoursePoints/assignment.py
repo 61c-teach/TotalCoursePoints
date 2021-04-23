@@ -372,12 +372,12 @@ class StudentAssignmentData:
 
     def get_late_interval(self):
         if self.late_interval is None:
-            return self.late_interval
+            return self.assignment.late_interval
         return self.late_interval
 
     def is_hidden(self):
         if self.hidden is None:
-            return self.hidden
+            return self.assignment.hidden
         return self.hidden
 
     def adjusted_late_time(self):

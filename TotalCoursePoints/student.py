@@ -4,6 +4,7 @@ This is a class which will contain info about the current student.
 from __future__ import annotations
 import json
 from . import GradeBins, PNP
+from typing import Union
 
 class Student:
     def __init__(self, name: str, sid: str, email: str, active_student: bool=True, grade_status: str="GRD", extensionData: dict={}, secret: str=None, incomplete: bool=False):
@@ -89,8 +90,10 @@ class Student:
         #         return a
         # return None
 
-    def get_category_data(self, category: Category) -> Category:
-        return self.categoryData.get(category.name)
+    def get_category_data(self, category: Union[Category, str]) -> Category:
+        if isinstance(category, Category):
+            category = category.name
+        return self.categoryData.get(category)
 
     def get_total_points_with_class(self, c, with_hidden=False) -> float:
         tp = c.get_total_possible()

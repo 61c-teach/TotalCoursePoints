@@ -141,6 +141,11 @@ class StudentCategoryData:
         self.reset_comment()
         self.override_score = None
 
+        self.drop_lowest_n_assignments = self.category.drop_lowest_n_assignments
+        self.max_slip_count = self.category.max_slip_count
+        self.hidden = self.category.hidden
+        self.does_not_contribute = self.category.does_not_contribute
+
     def append_comment(self, *args, sep=' ', end='\n'):
         self.personal_comment += sep.join(args) + end
 
@@ -149,7 +154,7 @@ class StudentCategoryData:
     
     def get_comment(self):
         c = self.personal_comment
-        dla = self.category.drop_lowest_n_assignments
+        dla = self.drop_lowest_n_assignments
         if dla > 0:
             c = f"This category will drop your lowest {str(dla) + ' ' if dla != 1 else ''}assignment{'s' if dla != 1 else ''}.\n" + c
         return c
@@ -161,7 +166,7 @@ class StudentCategoryData:
         return "Category: {}\nAssignments:\n{}".format(self.category.name, self.assignments_data)
 
     def apply_optimal_slip_time(self, ignore_score=False):
-        max_slip_count = self.category.max_slip_count
+        max_slip_count = self.max_slip_count
         if max_slip_count is None:
             return
         late_assignments = []
@@ -208,7 +213,7 @@ class StudentCategoryData:
         self.validate_slip_days()
     
     def validate_slip_days(self):
-        mx = self.category.max_slip_count
+        mx = self.max_slip_count
         if mx is None:
             return
         count = 0
@@ -218,7 +223,7 @@ class StudentCategoryData:
                 raise ValueError("Somehow applied more slipdays than the max!")
 
     def apply_ordered_slip_time(self, ignore_score=False):
-        slip_time_left = self.category.max_slip_count
+        slip_time_left = self.max_slip_count
         if slip_time_left is None:
             return
         for assignment in self.category.assignments:
@@ -236,16 +241,16 @@ class StudentCategoryData:
         self.validate_slip_days()
 
     def drop_lowest_assignments(self):
-        if self.category.drop_lowest_n_assignments >= len(self.assignments_data):
+        if self.drop_lowest_n_assignments >= len(self.assignments_data):
             raise ValueError("You cannot drop more assignments than what exists!")
         assignments = [(a, a.get_course_points()) for a in self.assignments_data if a.is_worth_points()]
-        for i in range(self.category.drop_lowest_n_assignments):
+        for i in range(self.drop_lowest_n_assignments):
             lowest = min(assignments, key=lambda x: x[1])
             lowest[0].drop_assignment()
             assignments.remove(lowest)
 
     def is_hidden(self):
-        return self.category.hidden
+        return self.hidden
 
     def get_assignment_data(self, assign_id: str) -> StudentAssignmentData:
         for assign in self.assignments_data:
@@ -262,13 +267,13 @@ class StudentCategoryData:
         for assign in self.assignments_data:
             slip_time_used += assign.slip_time_used
             s += assign.get_str()
-        if self.category.max_slip_count:
-            s += "\nSlip time left: {} out of {}\n".format(self.category.max_slip_count - slip_time_used, self.category.max_slip_count)
-        s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(ignore_not_for_points=True) if score is None else score, self.category.get_total_possible())
+        if self.max_slip_count:
+            s += "\nSlip time left: {} out of {}\n".format(self.max_slip_count - slip_time_used, self.max_slip_count)
+        s += "\n++++++++++\nTotal points: {} / {}\n++++++++++".format(self.get_total_score(ignore_not_for_points=True) if score is None else score, self.get_total_possible())
         return s
     
     def get_total_score(self, with_hidden=False, ignore_not_for_points=False):
-        if self.category.does_not_contribute and not ignore_not_for_points:
+        if self.does_not_contribute and not ignore_not_for_points:
             return 0
         if self.override_score is not None:
             return self.override_score
