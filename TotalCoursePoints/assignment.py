@@ -48,6 +48,7 @@ class Assignment:
         does_not_contribute: bool=None,
         max_late_time: int=None,
         give_perfect_score: bool=None,
+        load_on_init: bool=False,
     ):
         tmp = f": {name}" if name is not None else ""
         init_str = f"Initializing assignment {id}{tmp}..."
@@ -119,28 +120,39 @@ class Assignment:
         self.edata = {}
         self.scores = []
         self.all_scores = []
-        self.data_loaded = True
+        self.data_loaded = False
         self.additional_points = additional_points
-        if gsheets_grades is None:
-            gsheets_grades = self.default_gsheet_id
+        self.gsheets_grades = gsheets_grades
+        if self.gsheets_grades is None:
+            self.gsheets_grades = self.default_gsheet_id
+        if load_on_init:
+            self.load()
+        print(init_str_done)
+
+    def load(self):
+        tmp = f": {self.name}" if self.name is not None else ""
+        load_str = f"Loading assignment {self.id}{tmp}..."
+        load_str_done = load_str + "Done!"
+        print(load_str)
         try:
             self.load_file()
+            self.data_loaded = True
         except Exception as exc:
             def check_error_type(e):
                 if isinstance(e, ValueError) and str(e) == "Invalid lateness column!":
                     raise e from None
             check_error_type(exc)
-            if gsheets_grades is not None and gsheets_grades or gsheets_grades is None and self.use_gsheet_grades:
+            if self.gsheets_grades is not None and self.gsheets_grades or self.gsheets_grades is None and self.use_gsheet_grades:
                 try:
-                    self.load_gsheet(gsheets_grades)
+                    self.load_gsheet(self.gsheets_grades)
                 except Exception as e:
                     check_error_type(e)
-                    print(f"Failed to load grades from gsheet for {id}")
+                    print(f"Failed to load grades from gsheet for {self.id}")
                     self.data_loaded = False
             else:
                 self.data_loaded = False
                 print("Failed to load file {}.".format(self.data_file))
-        print(init_str_done)
+        print(load_str_done)
 
     def load_gsheet(self, gsheet, data_sheet: str=None):
         if data_sheet is None:
@@ -152,6 +164,7 @@ class Assignment:
         data = gdata.get_worksheet_records(data_sheet)
         try:
             self.load_data(data)
+            self.data_loaded = True
         except Exception as e:
             import traceback
             traceback.print_exc()

@@ -213,7 +213,7 @@ class Classroom:
         This function will go through each assigment and get the score for each student.
         """
         # Since we are making assignments load data when they get created, we should not be calling this.
-        # self.load_assignment_data()
+        self.load_assignment_data()
         print("Processing classroom data...")
         if only_active_students:
             print("Generating active student data...")

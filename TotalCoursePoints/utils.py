@@ -108,7 +108,9 @@ class GSheetBase:
         self.sheet_key = sheet_key
         self.sheet_data = None
         if prefetch:
+            print(f"Prefetching google sheet {sheet_key}...")
             self.sheet_data = self.fetch_all_sheets()
+            print(f"Prefetching google sheet {sheet_key}...Done!")
 
     def fetch_all_sheets(self):
         # meta = safe_gspread_call(self.sheets.fetch_sheet_metadata)

@@ -76,7 +76,7 @@ class Category:
 
     def load_assignment_data(self):
         for assignment in self.assignments:
-            assignment.load_data()
+            assignment.load()
 
     def get_total_possible(self, with_hidden=False, only_inputted=False):
         if self.extra_credit:
